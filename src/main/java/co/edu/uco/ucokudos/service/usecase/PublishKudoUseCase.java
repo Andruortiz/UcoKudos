@@ -23,6 +23,8 @@ import co.edu.uco.ucokudos.service.output.port.repository.KudoRepository;
 import co.edu.uco.ucokudos.service.output.port.repository.NotificationRepository;
 import co.edu.uco.ucokudos.service.output.port.repository.UserRepository;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -36,6 +38,7 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
 
+@Transactional
 public class PublishKudoUseCase implements PublishKudoPort {
 
     private static final ZoneId ZONE = ZoneId.of("America/Bogota");
