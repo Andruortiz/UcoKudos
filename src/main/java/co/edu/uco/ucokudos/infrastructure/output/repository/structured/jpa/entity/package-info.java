@@ -1,0 +1,1 @@
+package co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.entity;
