@@ -1,9 +1,9 @@
 package co.edu.uco.ucokudos.service.input.port;
 
-import co.edu.uco.ucokudos.service.usecase.PublishKudoCommand;
-import co.edu.uco.ucokudos.service.usecase.PublishKudoResult;
+import co.edu.uco.ucokudos.service.input.dto.request.PublishKudoRequest;
+import co.edu.uco.ucokudos.service.input.dto.response.PublishKudoResponse;
 
 public interface PublishKudoPort {
 
-    PublishKudoResult execute(PublishKudoCommand command);
+    PublishKudoResponse execute(PublishKudoRequest request);
 }

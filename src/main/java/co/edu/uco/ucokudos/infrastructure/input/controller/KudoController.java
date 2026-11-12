@@ -3,7 +3,6 @@ package co.edu.uco.ucokudos.infrastructure.input.controller;
 import co.edu.uco.ucokudos.crosscutting.exception.DomainException;
 import co.edu.uco.ucokudos.crosscutting.message.MessageCodes;
 import co.edu.uco.ucokudos.domain.model.Attachment;
-import co.edu.uco.ucokudos.infrastructure.input.mapper.PublishKudoDtoMapper;
 import co.edu.uco.ucokudos.service.input.dto.request.PublishKudoRequest;
 import co.edu.uco.ucokudos.service.input.dto.response.PublishKudoResponse;
 import co.edu.uco.ucokudos.service.input.port.PublishKudoPort;
@@ -29,11 +28,9 @@ import java.util.UUID;
 public class KudoController {
 
     private final PublishKudoPort publishKudoPort;
-    private final PublishKudoDtoMapper mapper;
 
-    public KudoController(final PublishKudoPort publishKudoPort, final PublishKudoDtoMapper mapper) {
+    public KudoController(final PublishKudoPort publishKudoPort) {
         this.publishKudoPort = publishKudoPort;
-        this.mapper = mapper;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -42,9 +39,10 @@ public class KudoController {
             @RequestPart(value = "files", required = false) final List<MultipartFile> files,
             @RequestHeader(value = "Idempotency-Key", required = false) final String idempotencyKey,
             final Authentication authentication) {
-        final List<Attachment> attachments = files == null ? List.of() : files.stream().map(this::toAttachment).toList();
-        final var command = mapper.toCommand(request, authorId(authentication), attachments, idempotencyKey);
-        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponse(publishKudoPort.execute(command)));
+        request.setAuthorId(authorId(authentication));
+        request.setIdempotencyKey(idempotencyKey);
+        request.setAttachments(files == null ? List.of() : files.stream().map(this::toAttachment).toList());
+        return ResponseEntity.status(HttpStatus.CREATED).body(publishKudoPort.execute(request));
     }
 
     private UUID authorId(final Authentication authentication) {

@@ -14,6 +14,9 @@ import co.edu.uco.ucokudos.domain.model.NotificationChannel;
 import co.edu.uco.ucokudos.domain.model.Role;
 import co.edu.uco.ucokudos.domain.model.User;
 import co.edu.uco.ucokudos.domain.model.UserStatus;
+import co.edu.uco.ucokudos.service.input.dto.request.PublishKudoRequest;
+import co.edu.uco.ucokudos.service.input.dto.response.NotificationResponse;
+import co.edu.uco.ucokudos.service.input.dto.response.PublishKudoResponse;
 import co.edu.uco.ucokudos.service.output.port.repository.AuditRepository;
 import co.edu.uco.ucokudos.service.output.port.repository.CategoryRepository;
 import co.edu.uco.ucokudos.service.output.port.repository.IdempotencyRepository;
@@ -35,7 +38,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PublishKudoUseCaseTest {
@@ -97,30 +99,41 @@ class PublishKudoUseCaseTest {
                 Clock.fixed(Instant.parse("2026-11-12T15:00:00Z"), ZoneOffset.UTC), 2, Duration.ofHours(1));
     }
 
-    private PublishKudoCommand command(final String key, final String content) {
-        return new PublishKudoCommand(author.getId(), recipient.getId(), category.getId(), content, List.of(), key);
+    private PublishKudoRequest request(final UUID authorId, final UUID recipientId, final String content,
+                                       final String key) {
+        final PublishKudoRequest request = new PublishKudoRequest();
+        request.setAuthorId(authorId);
+        request.setRecipientId(recipientId);
+        request.setCategoryId(category.getId());
+        request.setContent(content);
+        request.setIdempotencyKey(key);
+        return request;
     }
 
-    private String codeOf(final PublishKudoCommand command) {
-        return assertThrows(DomainException.class, () -> useCase.execute(command)).getCode();
+    private PublishKudoRequest command(final String key, final String content) {
+        return request(author.getId(), recipient.getId(), content, key);
+    }
+
+    private String codeOf(final PublishKudoRequest request) {
+        return assertThrows(DomainException.class, () -> useCase.execute(request)).getCode();
     }
 
     @Test
     void publishSavesKudoThreePendingNotificationsAndAudit() {
-        final PublishKudoResult result = useCase.execute(command("k1", "Gracias"));
+        final PublishKudoResponse result = useCase.execute(command("k1", "Gracias"));
         assertEquals(1, memory.kudos.size());
-        assertEquals(3, result.notifications().size());
+        assertEquals(3, result.getNotifications().size());
         assertEquals(List.of(NotificationChannel.values()),
-                result.notifications().stream().map(Notification::getChannel).toList());
+                result.getNotifications().stream().map(NotificationResponse::getChannel).toList());
         assertEquals(1, memory.audits.size());
-        assertEquals(result.kudo().getId(), memory.audits.get(0).resourceId());
+        assertEquals(result.getId(), memory.audits.get(0).resourceId());
     }
 
     @Test
     void sameKeyAndSameRequestReturnsTheOriginalWithoutSavingAgain() {
-        final PublishKudoResult first = useCase.execute(command("k1", "Gracias"));
-        final PublishKudoResult second = useCase.execute(command("k1", "Gracias"));
-        assertSame(first.kudo(), second.kudo());
+        final PublishKudoResponse first = useCase.execute(command("k1", "Gracias"));
+        final PublishKudoResponse second = useCase.execute(command("k1", "Gracias"));
+        assertEquals(first.getId(), second.getId());
         assertEquals(1, memory.kudos.size());
         assertEquals(1, memory.audits.size());
     }
@@ -138,8 +151,7 @@ class PublishKudoUseCaseTest {
 
     @Test
     void rejectedByRulesSavesNothing() {
-        final PublishKudoCommand toSelf = new PublishKudoCommand(author.getId(), author.getId(),
-                category.getId(), "Hola", List.of(), "k2");
+        final PublishKudoRequest toSelf = request(author.getId(), author.getId(), "Hola", "k2");
         assertEquals(MessageCodes.KUDO_RECIPIENT_SELF, codeOf(toSelf));
         recipient.setStatus(UserStatus.INACTIVE);
         assertEquals(MessageCodes.USER_NOT_ACTIVE, codeOf(command("k3", "Hola")));

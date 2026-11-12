@@ -14,6 +14,9 @@ import co.edu.uco.ucokudos.domain.model.Kudo;
 import co.edu.uco.ucokudos.domain.model.Notification;
 import co.edu.uco.ucokudos.domain.model.NotificationChannel;
 import co.edu.uco.ucokudos.domain.model.User;
+import co.edu.uco.ucokudos.service.input.dto.request.PublishKudoRequest;
+import co.edu.uco.ucokudos.service.input.dto.response.NotificationResponse;
+import co.edu.uco.ucokudos.service.input.dto.response.PublishKudoResponse;
 import co.edu.uco.ucokudos.service.input.port.PublishKudoPort;
 import co.edu.uco.ucokudos.service.output.port.attachment.AttachmentProcessor;
 import co.edu.uco.ucokudos.service.output.port.repository.AuditRepository;
@@ -78,34 +81,34 @@ public class PublishKudoUseCase implements PublishKudoPort {
     }
 
     @Override
-    public PublishKudoResult execute(final PublishKudoCommand command) {
-        if (command.idempotencyKey() == null || command.idempotencyKey().isBlank()) {
+    public PublishKudoResponse execute(final PublishKudoRequest request) {
+        if (request.getIdempotencyKey() == null || request.getIdempotencyKey().isBlank()) {
             throw new DomainException(MessageCodes.KUDO_IDEMPOTENCY_KEY_REQUIRED);
         }
         final Instant now = clock.instant();
-        final String hash = fingerprint(command);
+        final String hash = fingerprint(request);
 
         final Optional<IdempotencyRecord> previous =
-                idempotency.find(command.idempotencyKey(), command.authorId(), now.minus(idempotencyWindow));
+                idempotency.find(request.getIdempotencyKey(), request.getAuthorId(), now.minus(idempotencyWindow));
         if (previous.isPresent()) {
             if (!previous.get().requestHash().equals(hash)) {
                 throw new DomainException(MessageCodes.KUDO_IDEMPOTENCY_CONFLICT);
             }
             final Kudo original = kudos.findById(previous.get().kudoId()).orElseThrow(IllegalStateException::new);
-            return new PublishKudoResult(original, notifications.findByKudoId(original.getId()));
+            return toResponse(original, notifications.findByKudoId(original.getId()));
         }
 
-        final User author = users.findById(command.authorId())
+        final User author = users.findById(request.getAuthorId())
                 .orElseThrow(() -> new DomainException(MessageCodes.USER_NOT_FOUND));
-        final User recipient = users.findById(command.recipientId())
+        final User recipient = users.findById(request.getRecipientId())
                 .orElseThrow(() -> new DomainException(MessageCodes.USER_NOT_FOUND));
         userDomain.validateActive(author);
         userDomain.validateActive(recipient);
-        kudoDomain.validateContent(command.content());
+        kudoDomain.validateContent(request.getContent());
         kudoDomain.validateNotSelf(author, recipient);
         kudoDomain.validateRoleCanSend(author.getRole(), recipient.getRole());
 
-        final Category category = categories.findById(command.categoryId())
+        final Category category = categories.findById(request.getCategoryId())
                 .orElseThrow(() -> new DomainException(MessageCodes.CATEGORY_NOT_FOUND));
         kudoDomain.validateCategoryActive(category);
 
@@ -113,15 +116,15 @@ public class PublishKudoUseCase implements PublishKudoPort {
         kudoDomain.validateDailyLimit(kudos.countByAuthorBetween(author.getId(),
                 today.atStartOfDay(ZONE).toInstant(), today.plusDays(1).atStartOfDay(ZONE).toInstant()), dailyLimit);
 
-        kudoDomain.validateAttachments(command.attachments());
-        final List<Attachment> processed = attachmentProcessor.process(command.attachments());
+        kudoDomain.validateAttachments(request.getAttachments());
+        final List<Attachment> processed = attachmentProcessor.process(request.getAttachments());
 
         final Kudo kudo = new Kudo();
         kudo.setId(UuidHelper.generate());
         kudo.setAuthorId(author.getId());
         kudo.setRecipientId(recipient.getId());
         kudo.setCategoryId(category.getId());
-        kudo.setContent(command.content());
+        kudo.setContent(request.getContent());
         kudo.setCreatedAt(now);
         kudo.setAttachments(processed);
 
@@ -139,16 +142,30 @@ public class PublishKudoUseCase implements PublishKudoPort {
         kudos.save(kudo);
         notifications.saveAll(pending);
         audits.save(new AuditRecord(UuidHelper.generate(), now, author.getId(), AuditAction.KUDO_PUBLISHED,
-                RESOURCE_TYPE, kudo.getId(), command.idempotencyKey()));
-        idempotency.save(new IdempotencyRecord(command.idempotencyKey(), author.getId(), hash, kudo.getId(), now));
-        return new PublishKudoResult(kudo, pending);
+                RESOURCE_TYPE, kudo.getId(), request.getIdempotencyKey()));
+        idempotency.save(new IdempotencyRecord(request.getIdempotencyKey(), author.getId(), hash, kudo.getId(), now));
+        return toResponse(kudo, pending);
     }
 
-    private static String fingerprint(final PublishKudoCommand command) {
+    private static PublishKudoResponse toResponse(final Kudo kudo, final List<Notification> list) {
+        final PublishKudoResponse response = new PublishKudoResponse();
+        response.setId(kudo.getId());
+        response.setStatus(kudo.getStatus());
+        response.setCreatedAt(kudo.getCreatedAt());
+        response.setNotifications(list.stream().map(notification -> {
+            final NotificationResponse item = new NotificationResponse();
+            item.setChannel(notification.getChannel());
+            item.setStatus(notification.getStatus());
+            return item;
+        }).toList());
+        return response;
+    }
+
+    private static String fingerprint(final PublishKudoRequest request) {
         final StringBuilder text = new StringBuilder()
-                .append(command.recipientId()).append('|').append(command.categoryId()).append('|')
-                .append(command.content());
-        for (final Attachment attachment : command.attachments()) {
+                .append(request.getRecipientId()).append('|').append(request.getCategoryId()).append('|')
+                .append(request.getContent());
+        for (final Attachment attachment : request.getAttachments()) {
             text.append('|').append(attachment.name()).append(':').append(attachment.size());
         }
         try {
