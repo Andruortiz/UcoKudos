@@ -55,6 +55,9 @@ class PublishKudoUseCaseTest {
                     && !k.getCreatedAt().isBefore(from) && k.getCreatedAt().isBefore(to)).count();
         }
         public void saveAll(final List<Notification> list) { notifications.addAll(list); }
+        public void save(final Notification notification) { notifications.add(notification); }
+        public List<Notification> findDue(final java.util.Collection<NotificationChannel> channels,
+                                          final Instant now, final int limit) { return List.of(); }
         public List<Notification> findByKudoId(final UUID kudoId) {
             return notifications.stream().filter(n -> n.getKudoId().equals(kudoId)).toList();
         }
