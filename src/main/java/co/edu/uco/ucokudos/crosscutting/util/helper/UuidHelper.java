@@ -8,7 +8,7 @@ public class UuidHelper {
 
 
 
-    public static final UUID DEFAULT_UUID = new UUID(0L, 0L); // 00000000-0000-0000-0000-000000000000
+    public static final UUID DEFAULT_UUID = new UUID(0L, 0L);
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private UuidHelper() {

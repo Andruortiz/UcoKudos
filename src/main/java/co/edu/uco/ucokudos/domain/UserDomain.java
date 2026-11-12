@@ -18,7 +18,6 @@ public class UserDomain {
         }
     }
 
-    // RN-09: an account is only activated with a verified email and a verified phone
     public void validateCanActivate(final User user) {
         if (!user.isEmailVerified() || !user.isPhoneVerified()) {
             throw new DomainException(MessageCodes.USER_NOT_VERIFIED);
