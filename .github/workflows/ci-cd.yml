@@ -35,8 +35,9 @@ jobs:
       - name: Sonar analysis
         if: ${{ env.SONAR_TOKEN != '' }}
         run: >
-          ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
-          -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
+          ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:5.8.0.7211:sonar
+          -Dsonar.host.url=${{ secrets.SONAR_HOST_URL || 'https://sonarcloud.io' }}
+          -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
           -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
 
       - name: Trivy dependency and secret scan
