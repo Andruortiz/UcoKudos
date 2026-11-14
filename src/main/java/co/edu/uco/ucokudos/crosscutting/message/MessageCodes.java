@@ -23,6 +23,8 @@ public final class MessageCodes {
     public static final String KUDO_IDEMPOTENCY_KEY_REQUIRED = "kudo.idempotency.key.required";
     public static final String KUDO_IDEMPOTENCY_CONFLICT = "kudo.idempotency.conflict";
     public static final String REQUEST_INVALID = "request.invalid";
+    public static final String RECIPIENT_TEXT_TOO_SHORT = "recipient.text.too.short";
+    public static final String USER_LIST_NOT_ALLOWED = "user.list.not.allowed";
     public static final String NOTIFICATION_INVALID_TRANSITION = "notification.invalid.transition";
 
     private MessageCodes() {

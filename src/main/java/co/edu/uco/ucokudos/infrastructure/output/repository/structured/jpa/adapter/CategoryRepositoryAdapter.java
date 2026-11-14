@@ -4,6 +4,8 @@ import co.edu.uco.ucokudos.domain.model.Category;
 import co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.mapper.CategoryEntityMapper;
 import co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.repository.CategoryJpaRepository;
 import co.edu.uco.ucokudos.service.output.port.repository.CategoryRepository;
+
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
@@ -24,5 +26,10 @@ public class CategoryRepositoryAdapter implements CategoryRepository {
     @Override
     public Optional<Category> findById(final UUID id) {
         return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Category> findActive() {
+        return jpaRepository.findByActiveTrueOrderByNameAsc().stream().map(mapper::toDomain).toList();
     }
 }

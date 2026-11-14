@@ -1,4 +1,4 @@
-FROM eclipse-temurin:27-jdk AS build
+sFROM eclipse-temurin:27-jdk AS build
 WORKDIR /app
 COPY .mvn .mvn
 COPY mvnw pom.xml ./

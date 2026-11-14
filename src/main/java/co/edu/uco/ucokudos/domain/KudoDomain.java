@@ -7,7 +7,9 @@ import co.edu.uco.ucokudos.domain.model.Category;
 import co.edu.uco.ucokudos.domain.model.Role;
 import co.edu.uco.ucokudos.domain.model.User;
 
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 public class KudoDomain {
 
@@ -26,17 +28,30 @@ public class KudoDomain {
         }
     }
 
+    public Set<Role> allowedRecipientRoles(final Role from) {
+        final Set<Role> allowed = EnumSet.noneOf(Role.class);
+        for (final Role to : Role.values()) {
+            if (canSend(from, to)) {
+                allowed.add(to);
+            }
+        }
+        return allowed;
+    }
+
     public void validateRoleCanSend(final Role from, final Role to) {
+        if (!canSend(from, to)) {
+            throw new DomainException(MessageCodes.KUDO_ROLE_NOT_ALLOWED);
+        }
+    }
+
+    private static boolean canSend(final Role from, final Role to) {
         final int fromRank = rank(from);
         final int toRank = rank(to);
-        final boolean allowed = fromRank > 0 && toRank > 0 && switch (fromRank) {
+        return fromRank > 0 && toRank > 0 && switch (fromRank) {
             case 1 -> toRank <= 2;
             case 2 -> toRank >= 2;
             default -> true;
         };
-        if (!allowed) {
-            throw new DomainException(MessageCodes.KUDO_ROLE_NOT_ALLOWED);
-        }
     }
 
     public void validateCategoryActive(final Category category) {
