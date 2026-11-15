@@ -9,6 +9,7 @@ import co.edu.uco.ucokudos.domain.model.AuditRecord;
 import co.edu.uco.ucokudos.domain.model.Category;
 import co.edu.uco.ucokudos.domain.model.IdempotencyRecord;
 import co.edu.uco.ucokudos.domain.model.Kudo;
+import co.edu.uco.ucokudos.domain.model.KudoDirection;
 import co.edu.uco.ucokudos.domain.model.Notification;
 import co.edu.uco.ucokudos.domain.model.NotificationChannel;
 import co.edu.uco.ucokudos.domain.model.Role;
@@ -50,6 +51,7 @@ class PublishKudoUseCaseTest {
 
         public Kudo save(final Kudo kudo) { kudos.put(kudo.getId(), kudo); return kudo; }
         public Optional<Kudo> findById(final UUID id) { return Optional.ofNullable(kudos.get(id)); }
+        public List<Kudo> findAllByFilters(final UUID userId, final UUID categoryId, final KudoDirection direction) { return List.of(); }
         public long countByAuthorBetween(final UUID authorId, final Instant from, final Instant to) {
             return kudos.values().stream().filter(k -> k.getAuthorId().equals(authorId)
                     && !k.getCreatedAt().isBefore(from) && k.getCreatedAt().isBefore(to)).count();

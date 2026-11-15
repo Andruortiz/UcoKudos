@@ -26,4 +26,16 @@ public interface KudoJpaRepository extends JpaRepository<KudoJpaEntity, UUID> {
             """)
     List<UUID> findRecentRecipientIds(@Param("authorId") UUID authorId, @Param("roles") Collection<Role> roles,
                                       @Param("status") UserStatus status, Pageable pageable);
+
+    @Query("""
+        select k from KudoJpaEntity k
+        where ((:sent = true and k.authorId = :userId) or (:received = true and k.recipientId = :userId))
+          and (cast(:categoryId as uuid) is null or k.categoryId = :categoryId)
+        order by k.createdAt desc
+        """)
+    List<KudoJpaEntity> findByUserAndCategory(@Param("userId") UUID userId,
+                                              @Param("sent") boolean sent,
+                                              @Param("received") boolean received,
+                                              @Param("categoryId") UUID categoryId,
+                                              Pageable pageable);
 }

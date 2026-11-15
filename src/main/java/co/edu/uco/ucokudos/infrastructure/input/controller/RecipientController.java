@@ -2,6 +2,7 @@ package co.edu.uco.ucokudos.infrastructure.input.controller;
 
 import co.edu.uco.ucokudos.crosscutting.exception.DomainException;
 import co.edu.uco.ucokudos.crosscutting.message.MessageCodes;
+import co.edu.uco.ucokudos.service.input.dto.request.ListKudosRequest;
 import co.edu.uco.ucokudos.service.input.dto.request.ListRecipientsRequest;
 import co.edu.uco.ucokudos.service.input.dto.response.ListRecipientsResponse;
 import co.edu.uco.ucokudos.service.input.port.ListRecipientsPort;
@@ -40,4 +41,6 @@ public class RecipientController {
             throw new DomainException(MessageCodes.USER_NOT_FOUND);
         }
     }
+
+
 }

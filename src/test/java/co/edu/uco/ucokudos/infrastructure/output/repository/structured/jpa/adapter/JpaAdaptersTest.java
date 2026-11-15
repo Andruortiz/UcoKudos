@@ -7,6 +7,7 @@ import co.edu.uco.ucokudos.domain.model.AuditRecord;
 import co.edu.uco.ucokudos.domain.model.Category;
 import co.edu.uco.ucokudos.domain.model.IdempotencyRecord;
 import co.edu.uco.ucokudos.domain.model.Kudo;
+import co.edu.uco.ucokudos.domain.model.KudoDirection;
 import co.edu.uco.ucokudos.domain.model.Notification;
 import co.edu.uco.ucokudos.domain.model.NotificationChannel;
 import co.edu.uco.ucokudos.domain.model.NotificationStatus;
@@ -89,6 +90,28 @@ class JpaAdaptersTest {
         final Category found = categories.findById(category.getId()).orElseThrow();
         assertEquals(category.getName(), found.getName());
         assertTrue(found.isActive());
+    }
+
+    @Test
+    void kudosAreListedBySentReceivedOrBothAndByCategory() {
+        final UUID me = UuidHelper.generate();
+        final Kudo sent = kudo(me, NOW, List.of());
+        final Kudo received = kudo(UuidHelper.generate(), NOW.minusSeconds(10), List.of());
+        received.setRecipientId(me);
+        final Kudo other = kudo(UuidHelper.generate(), NOW, List.of());
+        kudos.save(sent);
+        kudos.save(received);
+        kudos.save(other);
+
+        assertEquals(List.of(sent.getId()), ids(kudos.findAllByFilters(me, null, KudoDirection.SENT)));
+        assertEquals(List.of(received.getId()), ids(kudos.findAllByFilters(me, null, KudoDirection.RECEIVED)));
+        assertEquals(List.of(sent.getId(), received.getId()), ids(kudos.findAllByFilters(me, null, KudoDirection.ALL)));
+        assertEquals(List.of(received.getId()),
+                ids(kudos.findAllByFilters(me, received.getCategoryId(), KudoDirection.ALL)));
+    }
+
+    private static List<UUID> ids(final List<Kudo> list) {
+        return list.stream().map(Kudo::getId).toList();
     }
 
     @Test

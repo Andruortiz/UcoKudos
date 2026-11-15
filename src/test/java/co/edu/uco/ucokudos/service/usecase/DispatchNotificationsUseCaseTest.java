@@ -6,6 +6,7 @@ import co.edu.uco.ucokudos.domain.model.AuditAction;
 import co.edu.uco.ucokudos.domain.model.AuditRecord;
 import co.edu.uco.ucokudos.domain.model.Category;
 import co.edu.uco.ucokudos.domain.model.Kudo;
+import co.edu.uco.ucokudos.domain.model.KudoDirection;
 import co.edu.uco.ucokudos.domain.model.Notification;
 import co.edu.uco.ucokudos.domain.model.NotificationChannel;
 import co.edu.uco.ucokudos.domain.model.NotificationStatus;
@@ -57,6 +58,7 @@ class DispatchNotificationsUseCaseTest {
         public Kudo save(final Kudo value) { return value; }
         public Optional<Kudo> findById(final UUID id) { return Optional.ofNullable(kudo); }
         public long countByAuthorBetween(final UUID authorId, final Instant from, final Instant to) { return 0; }
+        public List<Kudo> findAllByFilters(final UUID userId, final UUID categoryId, final KudoDirection direction) { return List.of(); }
         public void save(final AuditRecord record) { audits.add(record); }
     }
 
