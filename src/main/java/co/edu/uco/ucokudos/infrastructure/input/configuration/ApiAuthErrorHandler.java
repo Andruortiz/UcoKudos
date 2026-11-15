@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
-/** 401 and 403 answer with the same {code, message} body as every other error, so the front can show them. */
 @Component
 public class ApiAuthErrorHandler implements AuthenticationEntryPoint, AccessDeniedHandler {
 
@@ -42,7 +41,7 @@ public class ApiAuthErrorHandler implements AuthenticationEntryPoint, AccessDeni
         write(response, HttpStatus.FORBIDDEN, MessageCodes.AUTH_FORBIDDEN);
     }
 
-    /** The converter puts our own code in the OAuth2 error; anything else (expired, bad signature, no token) is invalid. */
+
     private static String codeOf(final AuthenticationException exception) {
         if (exception instanceof OAuth2AuthenticationException oauth) {
             final String code = oauth.getError().getErrorCode();

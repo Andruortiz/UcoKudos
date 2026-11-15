@@ -26,10 +26,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * shortcut: local development only, no real login. Every request is authenticated as the user in the
- * X-Dev-User header (or kudos.dev.user-id). Replace with Microsoft Entra (ADR-0003) before any shared environment.
- */
+
 @Configuration
 @EnableWebSecurity
 @ConditionalOnProperty(name = "kudos.dev-auth.enabled", havingValue = "true")
