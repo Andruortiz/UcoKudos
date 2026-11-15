@@ -25,6 +25,21 @@ class UsersStub implements UserRepository {
     }
 
     @Override
+    public java.util.List<User> findByIds(final java.util.Collection<UUID> ids) {
+        return ids.stream().map(finder).flatMap(Optional::stream).toList();
+    }
+
+    @Override
+    public Optional<User> findByDirectoryId(final String directoryId) {
+        return saved.values().stream().filter(u -> directoryId.equals(u.getDirectoryId())).findFirst();
+    }
+
+    @Override
+    public Optional<User> findByEmail(final String email) {
+        return saved.values().stream().filter(u -> email.equalsIgnoreCase(u.getEmail())).findFirst();
+    }
+
+    @Override
     public User save(final User user) {
         saved.put(user.getId(), user);
         return user;

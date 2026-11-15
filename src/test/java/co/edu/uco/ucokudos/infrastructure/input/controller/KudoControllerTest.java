@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -130,6 +131,43 @@ class KudoControllerTest {
                         .with(user(authorId.toString())).with(csrf()))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.code").value(MessageCodes.KUDO_SCANNER_UNAVAILABLE));
+    }
+
+    private String publishedId() throws Exception {
+        return com.jayway.jsonpath.JsonPath.read(
+                mvc.perform(post(recipientId, "Gracias", "key-" + authorId).with(user(authorId.toString())).with(csrf()))
+                        .andExpect(status().isCreated())
+                        .andReturn().getResponse().getContentAsString(), "$.id");
+    }
+
+    @Test
+    void theAuthorAndTheRecipientCanReadTheDetail() throws Exception {
+        final String id = publishedId();
+
+        mvc.perform(get("/api/v1/kudos/" + id).with(user(authorId.toString())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").value("Gracias"))
+                .andExpect(jsonPath("$.authorName").value("Usuario"))
+                .andExpect(jsonPath("$.attachments.length()").value(0));
+        mvc.perform(get("/api/v1/kudos/" + id).with(user(recipientId.toString())))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void aStrangerAndAnUnknownIdBothGetKudoNotFound() throws Exception {
+        final String id = publishedId();
+
+        mvc.perform(get("/api/v1/kudos/" + id).with(user(saveUser(Role.STUDENT).toString())))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(MessageCodes.KUDO_NOT_FOUND));
+        mvc.perform(get("/api/v1/kudos/" + UuidHelper.generate()).with(user(authorId.toString())))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(MessageCodes.KUDO_NOT_FOUND));
+    }
+
+    @Test
+    void theDetailWithoutAuthenticationIs401() throws Exception {
+        mvc.perform(get("/api/v1/kudos/" + UuidHelper.generate())).andExpect(status().isUnauthorized());
     }
 
     @Test

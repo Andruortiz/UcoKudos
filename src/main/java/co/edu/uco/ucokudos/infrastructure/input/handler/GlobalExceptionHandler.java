@@ -22,6 +22,8 @@ public class GlobalExceptionHandler {
     private static final Map<String, HttpStatus> STATUS_BY_CODE = Map.of(
             MessageCodes.USER_NOT_FOUND, HttpStatus.NOT_FOUND,
             MessageCodes.CATEGORY_NOT_FOUND, HttpStatus.NOT_FOUND,
+            MessageCodes.KUDO_NOT_FOUND, HttpStatus.NOT_FOUND,
+            MessageCodes.REGISTRATION_ALREADY_EXISTS, HttpStatus.CONFLICT,
             MessageCodes.KUDO_IDEMPOTENCY_KEY_REQUIRED, HttpStatus.BAD_REQUEST,
             MessageCodes.KUDO_IDEMPOTENCY_CONFLICT, HttpStatus.CONFLICT,
             MessageCodes.KUDO_SCANNER_UNAVAILABLE, HttpStatus.SERVICE_UNAVAILABLE,

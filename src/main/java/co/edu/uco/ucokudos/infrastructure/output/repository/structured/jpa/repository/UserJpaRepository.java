@@ -10,9 +10,14 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface UserJpaRepository extends JpaRepository<UserJpaEntity, UUID> {
+
+    Optional<UserJpaEntity> findByDirectoryId(String directoryId);
+
+    Optional<UserJpaEntity> findByEmailIgnoreCase(String email);
 
     String TEXT_FILTER = """
             (:text = '' or lower(u.name) like lower(concat('%', :text, '%'))
