@@ -25,7 +25,9 @@ public class GlobalExceptionHandler {
             MessageCodes.KUDO_IDEMPOTENCY_KEY_REQUIRED, HttpStatus.BAD_REQUEST,
             MessageCodes.KUDO_IDEMPOTENCY_CONFLICT, HttpStatus.CONFLICT,
             MessageCodes.KUDO_SCANNER_UNAVAILABLE, HttpStatus.SERVICE_UNAVAILABLE,
-            MessageCodes.KUDO_ROLE_NOT_ALLOWED, HttpStatus.FORBIDDEN);
+            MessageCodes.KUDO_ROLE_NOT_ALLOWED, HttpStatus.FORBIDDEN,
+            MessageCodes.USER_LIST_NOT_ALLOWED, HttpStatus.FORBIDDEN,
+            MessageCodes.RECIPIENT_TEXT_TOO_SHORT, HttpStatus.BAD_REQUEST);
 
     private final MessageSource messageSource;
 

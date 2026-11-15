@@ -4,6 +4,12 @@ import co.edu.uco.ucokudos.domain.model.Notification;
 import co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.mapper.NotificationEntityMapper;
 import co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.repository.NotificationJpaRepository;
 import co.edu.uco.ucokudos.service.output.port.repository.NotificationRepository;
+import co.edu.uco.ucokudos.domain.model.NotificationChannel;
+import co.edu.uco.ucokudos.domain.model.NotificationStatus;
+import org.springframework.data.domain.PageRequest;
+
+import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
@@ -29,5 +35,18 @@ public class NotificationRepositoryAdapter implements NotificationRepository {
     @Override
     public List<Notification> findByKudoId(final UUID kudoId) {
         return jpaRepository.findByKudoId(kudoId).stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
+    public void save(final Notification notification) {
+        jpaRepository.save(mapper.toJpa(notification));
+    }
+
+    @Override
+    public List<Notification> findDue(final Collection<NotificationChannel> channels, final Instant now, final int limit) {
+        return jpaRepository
+                .findByStatusAndChannelInAndNextAttemptAtLessThanEqualOrderByCreatedAtAsc(
+                        NotificationStatus.PENDING, channels, now, PageRequest.of(0, limit))
+                .stream().map(mapper::toDomain).toList();
     }
 }

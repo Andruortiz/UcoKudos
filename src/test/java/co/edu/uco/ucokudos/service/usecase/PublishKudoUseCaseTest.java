@@ -55,6 +55,9 @@ class PublishKudoUseCaseTest {
                     && !k.getCreatedAt().isBefore(from) && k.getCreatedAt().isBefore(to)).count();
         }
         public void saveAll(final List<Notification> list) { notifications.addAll(list); }
+        public void save(final Notification notification) { notifications.add(notification); }
+        public List<Notification> findDue(final java.util.Collection<NotificationChannel> channels,
+                                          final Instant now, final int limit) { return List.of(); }
         public List<Notification> findByKudoId(final UUID kudoId) {
             return notifications.stream().filter(n -> n.getKudoId().equals(kudoId)).toList();
         }
@@ -88,7 +91,10 @@ class PublishKudoUseCaseTest {
         recipient = user(Role.TEACHER);
         category.setId(UuidHelper.generate());
         final UserRepository userRepository = id -> Optional.ofNullable(users.get(id));
-        final CategoryRepository categoryRepository = id -> Optional.of(category);
+        final CategoryRepository categoryRepository = new CategoryRepository() {
+            public Optional<Category> findById(final UUID id) { return Optional.of(category); }
+            public List<Category> findActive() { return List.of(category); }
+        };
         useCase = new PublishKudoUseCase(userRepository, categoryRepository, memory, memory, memory, memory,
                 attachments -> {
                     if (scannerFails) {

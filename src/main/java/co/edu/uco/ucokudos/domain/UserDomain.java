@@ -2,6 +2,7 @@ package co.edu.uco.ucokudos.domain;
 
 import co.edu.uco.ucokudos.crosscutting.exception.DomainException;
 import co.edu.uco.ucokudos.crosscutting.message.MessageCodes;
+import co.edu.uco.ucokudos.domain.model.Role;
 import co.edu.uco.ucokudos.domain.model.User;
 
 import java.util.Collection;
@@ -46,4 +47,21 @@ public class UserDomain {
             throw new DomainException(MessageCodes.USER_PHONE_INVALID);
         }
     }
+
+
+    public void validateCanList(final Role requester, final Role target) {
+        final boolean allowed = switch (requester) {
+            case ADMINISTRATOR -> target == Role.ADMINISTRATOR || target == Role.RECTOR;
+            case RECTOR -> target == Role.ACADEMIC_COORDINATOR;
+            case ACADEMIC_COORDINATOR -> target == Role.FACULTY_COORDINATOR;
+            case FACULTY_COORDINATOR -> target == Role.PROGRAM_COORDINATOR;
+            case PROGRAM_COORDINATOR -> target == Role.STUDENT || target == Role.TEACHER;
+            default -> false;
+        };
+        if (!allowed) {
+            throw new DomainException(MessageCodes.USER_LIST_NOT_ALLOWED);
+        }
+    }
+
+
 }

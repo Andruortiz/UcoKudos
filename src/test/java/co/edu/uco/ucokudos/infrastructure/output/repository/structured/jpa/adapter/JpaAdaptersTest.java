@@ -129,6 +129,38 @@ class JpaAdaptersTest {
     }
 
     @Test
+    void findDueReturnsOnlyPendingDueNotificationsOfTheGivenChannels() {
+        final UUID kudoId = UuidHelper.generate();
+        final Notification due = notification(kudoId, NotificationChannel.EMAIL, NOW);
+        final Notification later = notification(kudoId, NotificationChannel.WHATSAPP, NOW.plusSeconds(600));
+        final Notification sent = notification(kudoId, NotificationChannel.PUSH, NOW);
+        sent.setStatus(NotificationStatus.SENT);
+        notifications.saveAll(List.of(due, later, sent));
+
+        final List<UUID> found = notifications.findDue(List.of(NotificationChannel.values()), NOW, 1000).stream()
+                .filter(n -> n.getKudoId().equals(kudoId)).map(Notification::getId).toList();
+        assertEquals(List.of(due.getId()), found);
+        assertTrue(notifications.findDue(List.of(NotificationChannel.WHATSAPP), NOW, 1000).stream()
+                .noneMatch(n -> n.getKudoId().equals(kudoId)));
+
+        due.setStatus(NotificationStatus.SENT);
+        due.setAttempts(1);
+        notifications.save(due);
+        assertTrue(notifications.findByKudoId(kudoId).stream()
+                .anyMatch(n -> n.getId().equals(due.getId()) && n.getStatus() == NotificationStatus.SENT));
+    }
+
+    private Notification notification(final UUID kudoId, final NotificationChannel channel, final Instant next) {
+        final Notification notification = new Notification();
+        notification.setId(UuidHelper.generate());
+        notification.setKudoId(kudoId);
+        notification.setChannel(channel);
+        notification.setCreatedAt(NOW);
+        notification.setNextAttemptAt(next);
+        return notification;
+    }
+
+    @Test
     void auditRecordIsSaved() {
         audits.save(new AuditRecord(UuidHelper.generate(), NOW, UuidHelper.generate(), AuditAction.KUDO_PUBLISHED,
                 "KUDO", UuidHelper.generate(), "key-1"));
