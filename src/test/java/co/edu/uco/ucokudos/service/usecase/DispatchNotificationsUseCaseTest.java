@@ -118,6 +118,7 @@ class DispatchNotificationsUseCaseTest {
         final CategoryRepository categories = new CategoryRepository() {
             public Optional<Category> findById(final UUID id) { return Optional.of(category); }
             public List<Category> findActive() { return List.of(category); }
+            public List<Category> findByIds(final java.util.Collection<UUID> ids) { return List.of(category); }
         };
         return new DispatchNotificationsUseCase(memory, memory, users, categories, memory, new NotificationDomain(),
                 List.of(senders), Clock.fixed(NOW, ZoneOffset.UTC), 50, maxAttempts, Duration.ofMinutes(1),

@@ -6,8 +6,10 @@ import co.edu.uco.ucokudos.domain.model.Attachment;
 import co.edu.uco.ucokudos.domain.model.KudoDirection;
 import co.edu.uco.ucokudos.service.input.dto.request.ListKudosRequest;
 import co.edu.uco.ucokudos.service.input.dto.request.PublishKudoRequest;
+import co.edu.uco.ucokudos.service.input.dto.response.KudoDetailResponse;
 import co.edu.uco.ucokudos.service.input.dto.response.ListKudosResponse;
 import co.edu.uco.ucokudos.service.input.dto.response.PublishKudoResponse;
+import co.edu.uco.ucokudos.service.input.port.GetKudoPort;
 import co.edu.uco.ucokudos.service.input.port.ListKudosPort;
 import co.edu.uco.ucokudos.service.input.port.PublishKudoPort;
 import jakarta.validation.Valid;
@@ -29,10 +31,13 @@ public class KudoController {
 
     private final PublishKudoPort publishKudoPort;
     private final ListKudosPort listKudosPort;
+    private final GetKudoPort getKudoPort;
 
-    public KudoController(final PublishKudoPort publishKudoPort, final ListKudosPort listKudosPort) {
+    public KudoController(final PublishKudoPort publishKudoPort, final ListKudosPort listKudosPort,
+                          final GetKudoPort getKudoPort) {
         this.publishKudoPort = publishKudoPort;
         this.listKudosPort = listKudosPort;
+        this.getKudoPort = getKudoPort;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -74,5 +79,10 @@ public class KudoController {
         request.setDirection(direction);
         request.setCategoryId(categoryId);
         return listKudosPort.execute(request);
+    }
+
+    @GetMapping("/{id}")
+    public KudoDetailResponse detail(@PathVariable("id") final UUID id, final Authentication authentication) {
+        return getKudoPort.execute(authorId(authentication), id);
     }
 }

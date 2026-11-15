@@ -12,6 +12,9 @@ public class KudoResponse {
 
     private UUID id;
     private UUID authorId;
+    private String authorName;
+    private String recipientName;
+    private String categoryName;
     private UUID recipientId;
     private UUID categoryId;
     private String content;
@@ -73,5 +76,29 @@ public class KudoResponse {
 
     public void setAuthorId(UUID authorId) {
         this.authorId = authorId;
+    }
+
+    public String getAuthorName() {
+        return authorName;
+    }
+
+    public void setAuthorName(String authorName) {
+        this.authorName = authorName;
+    }
+
+    public String getRecipientName() {
+        return recipientName;
+    }
+
+    public void setRecipientName(String recipientName) {
+        this.recipientName = recipientName;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
     }
 }

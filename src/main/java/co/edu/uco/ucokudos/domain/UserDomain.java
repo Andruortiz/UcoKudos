@@ -42,6 +42,12 @@ public class UserDomain {
         }
     }
 
+    public void validateSelfRegistrationRole(final Role role) {
+        if (role != Role.STUDENT && role != Role.TEACHER) {
+            throw new DomainException(MessageCodes.REGISTRATION_ROLE_INVALID);
+        }
+    }
+
     public void validatePhone(final String phone) {
         if (phone == null || !PHONE.matcher(phone).matches()) {
             throw new DomainException(MessageCodes.USER_PHONE_INVALID);

@@ -96,6 +96,7 @@ class PublishKudoUseCaseTest {
         final CategoryRepository categoryRepository = new CategoryRepository() {
             public Optional<Category> findById(final UUID id) { return Optional.of(category); }
             public List<Category> findActive() { return List.of(category); }
+            public List<Category> findByIds(final java.util.Collection<UUID> ids) { return List.of(category); }
         };
         useCase = new PublishKudoUseCase(userRepository, categoryRepository, memory, memory, memory, memory,
                 attachments -> {

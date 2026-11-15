@@ -22,5 +22,12 @@
   "request.invalid": "La petición no es válida",
   "notification.invalid.transition": "La notificación no admite ese cambio de estado",
   "recipient.text.too.short": "Escribe al menos {0} letras para buscar",
-  "user.list.not.allowed": "No puedes listar usuarios con ese rol"
+  "user.list.not.allowed": "No puedes listar usuarios con ese rol",
+  "auth.user.not.registered": "Tu cuenta no está registrada en UCO Kudos. Pide que te den de alta",
+  "auth.email.not.allowed": "Tu correo no pertenece a la institución",
+  "auth.token.invalid": "Tu sesión no es válida o expiró. Vuelve a iniciar sesión",
+  "auth.forbidden": "No tienes permiso para hacer esto",
+  "kudo.not.found": "El Kudo no existe",
+  "registration.role.invalid": "Solo puedes registrarte como estudiante o docente",
+  "registration.already.exists": "Ya existe una cuenta o una solicitud con ese correo"
 }
