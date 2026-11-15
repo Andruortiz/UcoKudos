@@ -113,7 +113,10 @@ class DispatchNotificationsUseCaseTest {
         final UserRepository users = id -> Optional.of(id.equals(author.getId()) ? author : recipient);
         final Category category = new Category();
         category.setName("Empatía");
-        final CategoryRepository categories = id -> Optional.of(category);
+        final CategoryRepository categories = new CategoryRepository() {
+            public Optional<Category> findById(final UUID id) { return Optional.of(category); }
+            public List<Category> findActive() { return List.of(category); }
+        };
         return new DispatchNotificationsUseCase(memory, memory, users, categories, memory, new NotificationDomain(),
                 List.of(senders), Clock.fixed(NOW, ZoneOffset.UTC), 50, maxAttempts, Duration.ofMinutes(1),
                 "http://front/kudos/").execute();

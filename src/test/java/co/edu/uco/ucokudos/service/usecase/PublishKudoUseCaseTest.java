@@ -91,7 +91,10 @@ class PublishKudoUseCaseTest {
         recipient = user(Role.TEACHER);
         category.setId(UuidHelper.generate());
         final UserRepository userRepository = id -> Optional.ofNullable(users.get(id));
-        final CategoryRepository categoryRepository = id -> Optional.of(category);
+        final CategoryRepository categoryRepository = new CategoryRepository() {
+            public Optional<Category> findById(final UUID id) { return Optional.of(category); }
+            public List<Category> findActive() { return List.of(category); }
+        };
         useCase = new PublishKudoUseCase(userRepository, categoryRepository, memory, memory, memory, memory,
                 attachments -> {
                     if (scannerFails) {
