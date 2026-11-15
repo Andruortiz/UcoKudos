@@ -2,6 +2,7 @@ package co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.adap
 
 import co.edu.uco.ucokudos.crosscutting.util.helper.UuidHelper;
 import co.edu.uco.ucokudos.domain.model.Kudo;
+import co.edu.uco.ucokudos.domain.model.KudoDirection;
 import co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.entity.KudoAttachmentJpaEntity;
 import co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.mapper.KudoAttachmentEntityMapper;
 import co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.mapper.KudoEntityMapper;
@@ -12,6 +13,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,5 +66,12 @@ public class KudoRepositoryAdapter implements KudoRepository {
     @Override
     public long countByAuthorBetween(final UUID authorId, final Instant from, final Instant to) {
         return jpaRepository.countByAuthorIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(authorId, from, to);
+    }
+
+    @Override
+    public List<Kudo> findAllByFilters(final UUID userId, final UUID categoryId, final KudoDirection direction) {
+        return jpaRepository.findByUserAndCategory(userId, direction != KudoDirection.RECEIVED,
+                        direction != KudoDirection.SENT, categoryId, PageRequest.of(0, 50))
+                .stream().map(mapper::toDomain).toList();
     }
 }

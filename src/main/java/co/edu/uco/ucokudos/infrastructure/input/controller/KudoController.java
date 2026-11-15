@@ -3,19 +3,19 @@ package co.edu.uco.ucokudos.infrastructure.input.controller;
 import co.edu.uco.ucokudos.crosscutting.exception.DomainException;
 import co.edu.uco.ucokudos.crosscutting.message.MessageCodes;
 import co.edu.uco.ucokudos.domain.model.Attachment;
+import co.edu.uco.ucokudos.domain.model.KudoDirection;
+import co.edu.uco.ucokudos.service.input.dto.request.ListKudosRequest;
 import co.edu.uco.ucokudos.service.input.dto.request.PublishKudoRequest;
+import co.edu.uco.ucokudos.service.input.dto.response.ListKudosResponse;
 import co.edu.uco.ucokudos.service.input.dto.response.PublishKudoResponse;
+import co.edu.uco.ucokudos.service.input.port.ListKudosPort;
 import co.edu.uco.ucokudos.service.input.port.PublishKudoPort;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -28,9 +28,11 @@ import java.util.UUID;
 public class KudoController {
 
     private final PublishKudoPort publishKudoPort;
+    private final ListKudosPort listKudosPort;
 
-    public KudoController(final PublishKudoPort publishKudoPort) {
+    public KudoController(final PublishKudoPort publishKudoPort, final ListKudosPort listKudosPort) {
         this.publishKudoPort = publishKudoPort;
+        this.listKudosPort = listKudosPort;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -59,5 +61,18 @@ public class KudoController {
         } catch (final IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+
+    @GetMapping
+    public ListKudosResponse listKudos(
+            @RequestParam(name = "categoryId", required = false) final UUID categoryId,
+            @RequestParam(name = "type", defaultValue = "ALL") final KudoDirection direction,
+            final Authentication authentication) {
+        final ListKudosRequest request = new ListKudosRequest();
+        request.setUserId(authorId(authentication));
+        request.setDirection(direction);
+        request.setCategoryId(categoryId);
+        return listKudosPort.execute(request);
     }
 }
