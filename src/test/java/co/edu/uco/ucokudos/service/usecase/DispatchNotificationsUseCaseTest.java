@@ -112,7 +112,7 @@ class DispatchNotificationsUseCaseTest {
     }
 
     private DispatchNotificationsResponse run(final int maxAttempts, final NotificationSender... senders) {
-        final UserRepository users = id -> Optional.of(id.equals(author.getId()) ? author : recipient);
+        final UserRepository users = new UsersStub(id -> Optional.of(id.equals(author.getId()) ? author : recipient));
         final Category category = new Category();
         category.setName("Empatía");
         final CategoryRepository categories = new CategoryRepository() {

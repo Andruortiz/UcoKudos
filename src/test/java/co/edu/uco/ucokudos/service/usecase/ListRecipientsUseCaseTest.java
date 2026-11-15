@@ -72,7 +72,7 @@ class ListRecipientsUseCaseTest {
     }
 
     private ListRecipientsUseCase build(final int limit) {
-        return new ListRecipientsUseCase(id -> Optional.of(requester), directory, new UserDomain(), new KudoDomain(),
+        return new ListRecipientsUseCase(new UsersStub(id -> Optional.of(requester)), directory, new UserDomain(), new KudoDomain(),
                 limit, 10);
     }
 
@@ -154,7 +154,7 @@ class ListRecipientsUseCaseTest {
 
     @Test
     void unknownRequesterIsRejected() {
-        useCase = new ListRecipientsUseCase(id -> Optional.empty(), directory, new UserDomain(), new KudoDomain(), 20, 10);
+        useCase = new ListRecipientsUseCase(new UsersStub(id -> Optional.empty()), directory, new UserDomain(), new KudoDomain(), 20, 10);
         assertEquals(MessageCodes.USER_NOT_FOUND, assertThrows(DomainException.class, () -> run(null)).getCode());
     }
 }
