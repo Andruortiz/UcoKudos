@@ -16,7 +16,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
-/** Real login: the API validates the Microsoft Entra access token (signature, issuer, audience, expiry). */
 @Configuration
 @EnableWebSecurity
 @ConditionalOnProperty(name = "kudos.dev-auth.enabled", havingValue = "false", matchIfMissing = true)

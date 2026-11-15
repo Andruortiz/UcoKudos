@@ -26,6 +26,8 @@ public final class MessageCodes {
     public static final String RECIPIENT_TEXT_TOO_SHORT = "recipient.text.too.short";
     public static final String USER_LIST_NOT_ALLOWED = "user.list.not.allowed";
     public static final String NOTIFICATION_INVALID_TRANSITION = "notification.invalid.transition";
+    public static final String NOTIFICATION_EMAIL_SUBJECT = "notification.email.subject";
+    public static final String NOTIFICATION_EMAIL_BODY = "notification.email.body";
     public static final String AUTH_USER_NOT_REGISTERED = "auth.user.not.registered";
     public static final String AUTH_EMAIL_NOT_ALLOWED = "auth.email.not.allowed";
     public static final String AUTH_TOKEN_INVALID = "auth.token.invalid";

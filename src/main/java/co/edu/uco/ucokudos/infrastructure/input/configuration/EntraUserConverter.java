@@ -18,11 +18,6 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Entra proves who the person is (ADR-0003); UCO Kudos decides what they can do (ADR-0004). The token is linked to
- * a user of our own database by its object id, or by email on the first login, and the authentication name becomes
- * that user's UUID, which is what the controllers expect. The email must belong to the institution's domains.
- */
 @Component
 public class EntraUserConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 
