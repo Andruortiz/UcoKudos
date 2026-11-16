@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -17,6 +18,7 @@ import java.net.http.HttpClient;
 import java.time.Duration;
 
 @Component
+@Primary
 @ConditionalOnProperty(name = "kudos.attachments.storage", havingValue = "azure")
 public class AzureBlobAttachmentStorage implements AttachmentStorage {
 
