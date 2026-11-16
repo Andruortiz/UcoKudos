@@ -4,6 +4,7 @@ import co.edu.uco.ucokudos.crosscutting.exception.DomainException;
 import co.edu.uco.ucokudos.crosscutting.message.MessageCodes;
 import co.edu.uco.ucokudos.infrastructure.output.notification.PushNotificationSender;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,9 +24,10 @@ public class PushController {
     }
 
     @GetMapping(path = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter stream(final Authentication authentication) {
+    public ResponseEntity<SseEmitter> stream(final Authentication authentication) {
         try {
-            return push.subscribe(UUID.fromString(authentication.getName()));
+            return ResponseEntity.ok().header("X-Accel-Buffering", "no")
+                    .body(push.subscribe(UUID.fromString(authentication.getName())));
         } catch (final IllegalArgumentException e) {
             throw new DomainException(MessageCodes.USER_NOT_FOUND);
         }
