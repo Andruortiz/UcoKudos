@@ -42,6 +42,199 @@ La API es **un solo servicio** con arquitectura hexagonal (puertos y adaptadores
 
 Los diagramas también están como archivos `.drawio` editables en la misma carpeta (se abren con [diagrams.net](https://app.diagrams.net)).
 
+## Secuencias
+
+### 1. Publicar un Kudo
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as Usuario
+    participant W as Aplicación web
+    participant GW as Gateway y WAF
+    participant A as KudoController
+    participant UC as PublishKudoUseCase
+    participant R as Reglas de dominio
+    participant AP as AttachmentProcessor
+    participant DB as PostgreSQL
+    participant B as Blob Storage
+
+    U->>W: Elige destinatario, categoría, mensaje y adjuntos
+    W->>W: Valida adjuntos, máximo 5, 10 MB, imagen o PDF
+    W->>GW: POST /api/v1/kudos multipart con Idempotency-Key y Bearer
+    GW->>A: Reenvía la petición si pasa las reglas del WAF
+    A->>A: Valida el JWT de Entra y toma el autor del token
+    A->>UC: execute con PublishKudoRequest
+    UC->>DB: Busca la clave de idempotencia de la última hora
+    alt La clave existe con la misma petición
+        UC-->>A: Devuelve el Kudo original
+    else La clave existe con otro contenido
+        UC-->>A: Error 409 kudo.idempotency.conflict
+    else Clave nueva
+        UC->>DB: Carga autor, destinatario y categoría
+        UC->>R: Valida usuarios activos, autor con correo y celular verificados, contenido, no autoenvío y matriz de roles
+        UC->>R: Valida categoría activa, límite diario de 50 y adjuntos
+        UC->>AP: process de los adjuntos
+        Note over AP: Rechaza el archivo cuyos bytes no coinciden con su tipo
+        UC->>B: Guarda cada adjunto con una URL firmada
+        UC->>DB: Transacción única, guarda Kudo, 3 notificaciones PENDING, auditoría KUDO_PUBLISHED y clave de idempotencia
+        UC-->>A: PublishKudoResponse
+    end
+    A-->>GW: 201 con el Kudo y el estado de cada canal
+    GW-->>W: 201 con el Kudo y el estado de cada canal
+    W-->>U: Muestra Kudo publicado
+```
+
+### 2. Despacho de notificaciones
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant S as NotificationDispatchScheduler
+    participant UC as DispatchNotificationsUseCase
+    participant DB as PostgreSQL
+    participant N as NotificationDomain
+    participant E as Canal de envío
+    participant P as Proveedor externo
+
+    loop Cada 30 segundos cuando kudos.dispatch.enabled es true
+        S->>UC: execute
+        UC->>DB: findDue de los canales con envío, lote de 50
+        loop Cada notificación
+            UC->>DB: Carga Kudo, destinatario, autor y categoría
+            UC->>E: send con el aviso del Kudo
+            alt Correo
+                E->>P: SMTP al correo del destinatario
+            else WhatsApp
+                E->>P: HTTPS con la plantilla kudos_envios_url: tres variables y el botón Ver Kudo
+            else Push
+                E->>P: Evento SSE si el destinatario está conectado
+            end
+            alt Enviado
+                UC->>N: markSent
+                UC->>DB: Guarda SENT y audita NOTIFICATION_SENT
+            else Sin conexión, solo push
+                UC->>N: markSkipped
+                UC->>DB: Guarda SKIPPED
+            else Error del proveedor
+                UC->>N: markFailed con espera creciente
+                alt Quedan intentos
+                    UC->>DB: Guarda PENDING con nueva fecha de intento
+                else Se agotaron 5 intentos
+                    UC->>DB: Guarda FAILED y audita NOTIFICATION_FAILED
+                end
+            end
+        end
+    end
+```
+
+### 3. Push en tiempo real
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor D as Destinatario
+    participant W as Aplicación web
+    participant PC as PushController
+    participant PS as PushNotificationSender
+    participant UC as DispatchNotificationsUseCase
+
+    D->>W: Inicia sesión y abre la aplicación
+    W->>PC: GET /api/v1/notifications/stream con Bearer y Accept text/event-stream
+    PC->>PS: subscribe del usuario
+    PS-->>W: Abre el flujo SSE y envía el comentario connected
+    loop Mientras la conexión siga abierta
+        PS-->>W: Comentario keep-alive cada 25 segundos
+    end
+    Note over UC,PS: Otro usuario publica un Kudo para el destinatario
+    UC->>PS: send con kudoId, autor, categoría y enlace
+    PS-->>W: Evento kudo con los datos del aviso
+    W-->>D: Muestra la notificación con el enlace al Kudo
+    Note over W: Si la conexión se corta, la aplicación vuelve a conectarse a los 5 segundos
+```
+
+### 4. Acceso, inicio de sesión y registro
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor P as Persona nueva
+    participant W as Aplicación web
+    participant API as API UCO Kudos
+    participant G as Microsoft Graph
+    participant E as Microsoft Entra ID
+    participant DB as PostgreSQL
+
+    P->>W: Abre Pedir acceso y escribe su correo institucional
+    W->>API: POST /api/v1/access-requests sin sesión, con límite de uso
+    API->>API: Valida que el dominio del correo sea institucional
+    API->>DB: Busca el correo
+    alt Ya tiene cuenta
+        API-->>W: ALREADY_HAS_ACCESS
+    else No tiene cuenta
+        API->>E: Pide un token de aplicación con client credentials
+        API->>G: POST /invitations con el correo
+        G-->>P: Microsoft envía la invitación al buzón institucional
+        API-->>W: INVITED
+    end
+    P->>E: Acepta la invitación y pulsa Entrar con Microsoft
+    W->>E: Inicio de sesión con OpenID Connect y PKCE, ámbito access_as_user
+    E-->>W: Token de acceso
+    W->>API: Petición con Authorization Bearer
+    API->>E: Valida emisor, destinatario, firma y expiración
+    API->>DB: Busca el usuario por el identificador de directorio o enlaza por correo
+    alt El usuario no existe todavía
+        API-->>W: Autoridad UNREGISTERED, solo puede registrarse
+        W->>API: POST /api/v1/registrations con el nombre
+        API->>DB: Crea el usuario ACTIVE con correo verificado y celular sin verificar
+        API-->>W: Registro APPROVED
+    else El usuario existe
+        API-->>W: Acceso a la API con su rol de la base de datos
+    end
+```
+
+### 5. Verificación del celular
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as Usuario
+    participant W as Aplicación web
+    participant API as ProfileController
+    participant UC as Casos de uso del celular
+    participant DB as PostgreSQL
+    participant SMS as Vonage SMS
+
+    U->>W: Escribe su número en formato internacional
+    W->>API: PUT /api/v1/me/phone
+    API->>UC: UpdatePhoneUseCase valida el formato, guarda y audita PHONE_UPDATED
+    U->>W: Pide el código
+    W->>API: POST /api/v1/me/phone/verification
+    API->>UC: RequestPhoneVerificationUseCase
+    UC->>DB: Lee los envíos de la última hora
+    alt Menos de 1 minuto desde el último envío
+        UC-->>W: Error phone.code.too.soon
+    else Ya hubo 5 envíos en la hora
+        UC-->>W: Error phone.code.too.many
+    else Puede enviar
+        UC->>SMS: Envía el código de 6 dígitos
+        UC->>DB: Guarda el hash del código, caducidad y contadores, audita PHONE_VERIFICATION_SENT
+    end
+    U->>W: Escribe el código recibido
+    W->>API: POST /api/v1/me/phone/verification/confirm
+    API->>UC: ConfirmPhoneVerificationUseCase
+    UC->>DB: Lee la verificación
+    alt Código vencido o 5 intentos fallidos
+        UC-->>W: Error phone.code.expired o phone.code.too.many
+    else Código distinto
+        UC->>DB: Suma un intento
+        UC-->>W: Error phone.code.invalid
+    else Código correcto
+        UC->>DB: phone_verified es true, borra la verificación y audita PHONE_VERIFIED
+        UC-->>W: Perfil con el celular verificado
+    end
+```
+
 ## Tecnologías
 
 | Pieza | Tecnología |
