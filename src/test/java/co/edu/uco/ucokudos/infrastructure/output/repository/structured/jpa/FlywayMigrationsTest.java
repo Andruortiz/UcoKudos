@@ -36,6 +36,11 @@ class FlywayMigrationsTest {
     }
 
     @Test
+    void everyEnvironmentGetsTheInitialCategories() {
+        assertEquals(5, jdbc.queryForObject("select count(*) from category where active", Integer.class));
+    }
+
+    @Test
     void theAuditActionsIncludeThePhoneUpdate() {
         jdbc.update("insert into audit_record (id, occurred_at, actor_id, action, resource_type, resource_id, "
                 + "correlation_id) values (gen_random_uuid(), now(), null, 'PHONE_UPDATED', 'USER', gen_random_uuid(), 'x')");
