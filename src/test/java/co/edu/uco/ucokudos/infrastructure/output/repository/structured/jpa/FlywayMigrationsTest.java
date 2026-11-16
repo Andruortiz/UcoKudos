@@ -42,6 +42,16 @@ class FlywayMigrationsTest {
     }
 
     @Test
+    void theAuditActionsIncludeThePhoneVerification() {
+        for (final String action : new String[]{"PHONE_VERIFICATION_SENT", "PHONE_VERIFIED"}) {
+            jdbc.update("insert into audit_record (id, occurred_at, actor_id, action, resource_type, resource_id, "
+                    + "correlation_id) values (gen_random_uuid(), now(), null, ?, 'USER', gen_random_uuid(), 'x')", action);
+        }
+
+        assertEquals(0, jdbc.queryForObject("select count(*) from phone_verification", Integer.class));
+    }
+
+    @Test
     void theAuditActionsIncludeThePhoneUpdate() {
         jdbc.update("insert into audit_record (id, occurred_at, actor_id, action, resource_type, resource_id, "
                 + "correlation_id) values (gen_random_uuid(), now(), null, 'PHONE_UPDATED', 'USER', gen_random_uuid(), 'x')");

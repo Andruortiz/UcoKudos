@@ -83,6 +83,8 @@ class PublishKudoUseCaseTest {
         user.setId(UuidHelper.generate());
         user.setRole(role);
         user.setStatus(UserStatus.ACTIVE);
+        user.setEmailVerified(true);
+        user.setPhoneVerified(true);
         users.put(user.getId(), user);
         return user;
     }
@@ -156,6 +158,16 @@ class PublishKudoUseCaseTest {
     @Test
     void missingKeyIsRejected() {
         assertEquals(MessageCodes.KUDO_IDEMPOTENCY_KEY_REQUIRED, codeOf(command(" ", "Gracias")));
+    }
+
+    @Test
+    void anAuthorWithoutVerifiedPhoneOrEmailCannotSend() {
+        author.setPhoneVerified(false);
+        assertEquals(MessageCodes.KUDO_SENDER_NOT_VERIFIED, codeOf(command("k4", "Hola")));
+        author.setPhoneVerified(true);
+        author.setEmailVerified(false);
+        assertEquals(MessageCodes.KUDO_SENDER_NOT_VERIFIED, codeOf(command("k5", "Hola")));
+        assertEquals(0, memory.kudos.size());
     }
 
     @Test

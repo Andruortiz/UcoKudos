@@ -13,6 +13,7 @@ public final class MessageCodes {
     public static final String KUDO_CONTENT_REQUIRED = "kudo.content.required";
     public static final String KUDO_RECIPIENT_SELF = "kudo.recipient.self";
     public static final String KUDO_ROLE_NOT_ALLOWED = "kudo.role.not.allowed";
+    public static final String KUDO_SENDER_NOT_VERIFIED = "kudo.sender.not.verified";
     public static final String KUDO_CATEGORY_NOT_ACTIVE = "kudo.category.not.active";
     public static final String KUDO_DAILY_LIMIT = "kudo.daily.limit";
     public static final String KUDO_ATTACHMENT_TOO_MANY = "kudo.attachment.too.many";
@@ -36,6 +37,12 @@ public final class MessageCodes {
     public static final String REGISTRATION_ALREADY_EXISTS = "registration.already.exists";
     public static final String ACCESS_UNAVAILABLE = "access.unavailable";
     public static final String ACCESS_TOO_MANY = "access.too.many";
+    public static final String PHONE_CODE_INVALID = "phone.code.invalid";
+    public static final String PHONE_CODE_EXPIRED = "phone.code.expired";
+    public static final String PHONE_CODE_TOO_SOON = "phone.code.too.soon";
+    public static final String PHONE_CODE_TOO_MANY = "phone.code.too.many";
+    public static final String PHONE_VERIFICATION_UNAVAILABLE = "phone.verification.unavailable";
+    public static final String PHONE_VERIFICATION_SMS = "phone.verification.sms";
 
     private MessageCodes() {
     }

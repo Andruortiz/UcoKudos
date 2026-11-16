@@ -51,6 +51,8 @@ class KudoControllerTest {
         user.setEmail(user.getId() + "@uco.net.co");
         user.setRole(role);
         user.setStatus(UserStatus.ACTIVE);
+        user.setEmailVerified(true);
+        user.setPhoneVerified(true);
         user.setCreatedAt(Instant.now());
         userJpa.save(userMapper.toJpa(user));
         return user.getId();
