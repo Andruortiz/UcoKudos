@@ -102,3 +102,33 @@ jobs:
           tags: |
             ${{ env.IMAGE }}:${{ github.sha }}
             ${{ env.IMAGE }}:latest
+
+  deploy:
+    name: Deploy to Azure
+    needs: image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master' && vars.AZURE_CLIENT_ID != ''
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Image name in lowercase
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      - uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy the image of this commit
+        run: >
+          az containerapp update
+          --resource-group rg-ucokudos
+          --name ca-ucokudos-api
+          --image ${{ env.IMAGE }}:${{ github.sha }}
+
+      - name: Wait for the API to be healthy
+        run: >
+          curl --fail --silent --show-error --retry 18 --retry-delay 10 --retry-all-errors
+          https://ca-ucokudos-gw.calmmeadow-fd0780b8.centralus.azurecontainerapps.io/actuator/health
