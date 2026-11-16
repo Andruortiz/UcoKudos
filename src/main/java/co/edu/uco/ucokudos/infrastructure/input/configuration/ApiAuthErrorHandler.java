@@ -7,7 +7,9 @@ import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -38,6 +40,12 @@ public class ApiAuthErrorHandler implements AuthenticationEntryPoint, AccessDeni
     @Override
     public void handle(final HttpServletRequest request, final HttpServletResponse response,
                        final AccessDeniedException exception) throws IOException {
+        final Authentication current = SecurityContextHolder.getContext().getAuthentication();
+        if (current != null && current.getAuthorities().stream()
+                .anyMatch(authority -> EntraUserConverter.UNREGISTERED.equals(authority.getAuthority()))) {
+            write(response, HttpStatus.UNAUTHORIZED, MessageCodes.AUTH_USER_NOT_REGISTERED);
+            return;
+        }
         write(response, HttpStatus.FORBIDDEN, MessageCodes.AUTH_FORBIDDEN);
     }
 

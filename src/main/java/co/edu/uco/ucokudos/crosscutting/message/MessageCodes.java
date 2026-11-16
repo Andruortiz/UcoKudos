@@ -33,7 +33,6 @@ public final class MessageCodes {
     public static final String AUTH_TOKEN_INVALID = "auth.token.invalid";
     public static final String AUTH_FORBIDDEN = "auth.forbidden";
     public static final String KUDO_NOT_FOUND = "kudo.not.found";
-    public static final String REGISTRATION_ROLE_INVALID = "registration.role.invalid";
     public static final String REGISTRATION_ALREADY_EXISTS = "registration.already.exists";
 
     private MessageCodes() {
