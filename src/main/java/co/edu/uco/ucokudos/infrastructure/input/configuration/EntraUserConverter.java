@@ -21,6 +21,8 @@ import java.util.Optional;
 @Component
 public class EntraUserConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 
+    public static final String UNREGISTERED = "UNREGISTERED";
+
     private final UserRepository users;
     private final UserDomain userDomain;
     private final List<String> allowedDomains;
@@ -47,14 +49,16 @@ public class EntraUserConverter implements Converter<Jwt, AbstractAuthentication
         } catch (final DomainException e) {
             throw rejected(MessageCodes.AUTH_EMAIL_NOT_ALLOWED);
         }
-        final User user = users.findByDirectoryId(objectId)
+        return users.findByDirectoryId(objectId)
                 .or(() -> linkByEmail(email, objectId))
-                .orElseThrow(() -> rejected(MessageCodes.AUTH_USER_NOT_REGISTERED));
-        return new JwtAuthenticationToken(jwt, AuthorityUtils.NO_AUTHORITIES, user.getId().toString());
+                .<AbstractAuthenticationToken>map(user ->
+                        new JwtAuthenticationToken(jwt, AuthorityUtils.NO_AUTHORITIES, user.getId().toString()))
+                .orElseGet(() -> new JwtAuthenticationToken(jwt, AuthorityUtils.createAuthorityList(UNREGISTERED),
+                        objectId));
     }
 
     /** Members of the directory often have no "email" claim; their user name is the address. Guest #EXT# names are not. */
-    private static String emailOf(final Jwt jwt) {
+    public static String emailOf(final Jwt jwt) {
         final String email = jwt.getClaimAsString("email");
         if (email != null && !email.isBlank()) {
             return email;

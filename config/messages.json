@@ -28,7 +28,6 @@
   "auth.token.invalid": "Tu sesión no es válida o expiró. Vuelve a iniciar sesión",
   "auth.forbidden": "No tienes permiso para hacer esto",
   "kudo.not.found": "El Kudo no existe",
-  "registration.role.invalid": "Solo puedes registrarte como estudiante o docente",
   "registration.already.exists": "Ya existe una cuenta o una solicitud con ese correo",
   "notification.email.subject": "Recibiste un Kudo de {0}",
   "notification.email.body": "Hola {0},\n\n{1} te envió un Kudo de la categoría {2}.\n\nPuedes verlo aquí: {3}\n\nUCO Kudos"

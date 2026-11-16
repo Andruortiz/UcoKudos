@@ -42,10 +42,8 @@ public class UserDomain {
         }
     }
 
-    public void validateSelfRegistrationRole(final Role role) {
-        if (role != Role.STUDENT && role != Role.TEACHER) {
-            throw new DomainException(MessageCodes.REGISTRATION_ROLE_INVALID);
-        }
+    public Role roleForNewAccount(final String email) {
+        return email.endsWith("@uco.edu.co") ? Role.TEACHER : Role.STUDENT;
     }
 
     public void validatePhone(final String phone) {

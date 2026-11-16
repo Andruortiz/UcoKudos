@@ -90,9 +90,12 @@ class EntraUserConverterTest {
     }
 
     @Test
-    void anInstitutionalUserNotInTheDatabaseIsNotRegistered() {
-        assertEquals(MessageCodes.AUTH_USER_NOT_REGISTERED,
-                rejectionOf(Map.of("oid", "x", "email", "otro@uco.net.co")));
+    void anAllowedUserNotInTheDatabaseGetsOnlyTheUnregisteredAuthority() {
+        final Authentication auth = converter.convert(jwt(Map.of("oid", "x", "email", "otro@uco.net.co")));
+
+        assertEquals("x", auth.getName());
+        assertEquals(List.of(EntraUserConverter.UNREGISTERED),
+                auth.getAuthorities().stream().map(a -> a.getAuthority()).toList());
     }
 
     @Test

@@ -4,64 +4,51 @@ import co.edu.uco.ucokudos.crosscutting.exception.DomainException;
 import co.edu.uco.ucokudos.crosscutting.message.MessageCodes;
 import co.edu.uco.ucokudos.crosscutting.util.helper.UuidHelper;
 import co.edu.uco.ucokudos.domain.UserDomain;
-import co.edu.uco.ucokudos.domain.model.RegistrationRequest;
 import co.edu.uco.ucokudos.domain.model.RegistrationStatus;
 import co.edu.uco.ucokudos.domain.model.Role;
 import co.edu.uco.ucokudos.domain.model.User;
+import co.edu.uco.ucokudos.domain.model.UserStatus;
 import co.edu.uco.ucokudos.service.input.dto.request.SubmitRegistrationRequest;
 import co.edu.uco.ucokudos.service.input.dto.response.RegistrationResponse;
-import co.edu.uco.ucokudos.service.output.port.repository.RegistrationRepository;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SubmitRegistrationUseCaseTest {
 
-    private final List<RegistrationRequest> saved = new ArrayList<>();
     private final User existing = new User();
+    private final UsersStub users;
     private final SubmitRegistrationUseCase useCase;
 
     SubmitRegistrationUseCaseTest() {
         existing.setId(UuidHelper.generate());
         existing.setEmail("ana@uco.net.co");
-        final RegistrationRepository registrations = new RegistrationRepository() {
-            public RegistrationRequest save(final RegistrationRequest request) { saved.add(request); return request; }
-            public boolean existsPendingByEmail(final String email) {
-                return saved.stream().anyMatch(r -> r.getEmail().equals(email));
-            }
-        };
-        final UsersStub users = new UsersStub(id -> Optional.empty()) {
+        users = new UsersStub(id -> Optional.empty()) {
             @Override
             public Optional<User> findByEmail(final String email) {
-                return email.equals(existing.getEmail()) ? Optional.of(existing) : Optional.empty();
+                return email.equals(existing.getEmail()) ? Optional.of(existing) : super.findByEmail(email);
             }
         };
-        useCase = new UseCaseFactory().build(registrations, users);
+        useCase = new SubmitRegistrationUseCase(users, new UserDomain(),
+                List.of("uco.net.co", "uco.edu.co", "ucokudosgmail.onmicrosoft.com"),
+                Clock.fixed(Instant.parse("2026-11-14T10:00:00Z"), ZoneOffset.UTC));
     }
 
-    /** Keeps the constructor call in one place. */
-    private static final class UseCaseFactory {
-        SubmitRegistrationUseCase build(final RegistrationRepository registrations, final UsersStub users) {
-            return new SubmitRegistrationUseCase(registrations, users, new UserDomain(), List.of("uco.net.co"),
-                    Clock.fixed(Instant.parse("2026-11-14T10:00:00Z"), ZoneOffset.UTC));
-        }
-    }
-
-    private static SubmitRegistrationRequest request(final String email, final Role role) {
+    private static SubmitRegistrationRequest request(final String email) {
         final SubmitRegistrationRequest request = new SubmitRegistrationRequest();
         request.setName("  Pedro Pérez ");
         request.setEmail(email);
-        request.setPhone("+573001234567");
-        request.setRole(role);
+        request.setDirectoryId("oid-" + email.trim());
         return request;
     }
 
@@ -69,52 +56,65 @@ class SubmitRegistrationUseCaseTest {
         return assertThrows(DomainException.class, () -> useCase.execute(request)).getCode();
     }
 
-    @Test
-    void aValidRequestIsSavedAsPendingWithCleanData() {
-        final RegistrationResponse response = useCase.execute(request(" Pedro@UCO.net.co ", Role.STUDENT));
-
-        assertEquals(RegistrationStatus.PENDING, response.status());
-        assertEquals(1, saved.size());
-        assertEquals("pedro@uco.net.co", saved.get(0).getEmail());
-        assertEquals("Pedro Pérez", saved.get(0).getName());
+    private User createdUser() {
+        return users.saved.values().iterator().next();
     }
 
     @Test
-    void anEmailOutsideTheInstitutionIsRejected() {
-        assertEquals(MessageCodes.USER_EMAIL_NOT_INSTITUTIONAL, codeOf(request("pedro@gmail.com", Role.STUDENT)));
-        assertTrue(saved.isEmpty());
+    void aValidRequestCreatesAnActiveStudentWithoutPhoneLinkedToTheDirectory() {
+        final RegistrationResponse response = useCase.execute(request(" Pedro@UCO.net.co "));
+
+        assertEquals(RegistrationStatus.APPROVED, response.status());
+        assertEquals(1, users.saved.size());
+        final User user = createdUser();
+        assertEquals(user.getId(), response.id());
+        assertEquals("pedro@uco.net.co", user.getEmail());
+        assertEquals("Pedro Pérez", user.getName());
+        assertEquals("oid-Pedro@UCO.net.co", user.getDirectoryId());
+        assertEquals(UserStatus.ACTIVE, user.getStatus());
+        assertEquals(Role.STUDENT, user.getRole());
+        assertNull(user.getPhone());
+        assertTrue(user.isEmailVerified());
+        assertFalse(user.isPhoneVerified());
     }
 
     @Test
-    void onlyStudentsAndTeachersCanRegisterThemselves() {
-        assertEquals(MessageCodes.REGISTRATION_ROLE_INVALID, codeOf(request("pedro@uco.net.co", Role.RECTOR)));
-        assertEquals(MessageCodes.REGISTRATION_ROLE_INVALID, codeOf(request("pedro@uco.net.co", null)));
-        useCase.execute(request("pedro@uco.net.co", Role.TEACHER));
-        assertEquals(1, saved.size());
+    void anInstitutionalTeacherAddressGetsTheTeacherRole() {
+        useCase.execute(request("profe@uco.edu.co"));
+
+        assertEquals(Role.TEACHER, createdUser().getRole());
     }
 
     @Test
-    void anInvalidPhoneIsRejected() {
-        final SubmitRegistrationRequest request = request("pedro@uco.net.co", Role.STUDENT);
-        request.setPhone("3001234567");
+    void theDemoDirectoryDomainIsAccepted() {
+        useCase.execute(request("ana2@ucokudosgmail.onmicrosoft.com"));
 
-        assertEquals(MessageCodes.USER_PHONE_INVALID, codeOf(request));
+        assertEquals(1, users.saved.size());
+    }
+
+    @Test
+    void anEmailOutsideTheAllowedDomainsIsRejected() {
+        assertEquals(MessageCodes.USER_EMAIL_NOT_INSTITUTIONAL, codeOf(request("pedro@gmail.com")));
+        assertTrue(users.saved.isEmpty());
     }
 
     @Test
     void aBlankNameIsRejected() {
-        final SubmitRegistrationRequest request = request("pedro@uco.net.co", Role.STUDENT);
+        final SubmitRegistrationRequest request = request("pedro@uco.net.co");
         request.setName("   ");
 
         assertEquals(MessageCodes.USER_NAME_REQUIRED, codeOf(request));
     }
 
     @Test
-    void anExistingAccountOrAPendingRequestBlocksTheSameEmail() {
-        assertEquals(MessageCodes.REGISTRATION_ALREADY_EXISTS, codeOf(request("ana@uco.net.co", Role.STUDENT)));
+    void anExistingAccountBlocksTheSameEmailOrTheSameDirectoryUser() {
+        assertEquals(MessageCodes.REGISTRATION_ALREADY_EXISTS, codeOf(request("ana@uco.net.co")));
 
-        useCase.execute(request("pedro@uco.net.co", Role.STUDENT));
-        assertEquals(MessageCodes.REGISTRATION_ALREADY_EXISTS, codeOf(request("PEDRO@uco.net.co", Role.STUDENT)));
-        assertEquals(1, saved.size());
+        useCase.execute(request("pedro@uco.net.co"));
+        assertEquals(MessageCodes.REGISTRATION_ALREADY_EXISTS, codeOf(request("PEDRO@uco.net.co")));
+        final SubmitRegistrationRequest sameDirectoryUser = request("otro@uco.net.co");
+        sameDirectoryUser.setDirectoryId("oid-pedro@uco.net.co");
+        assertEquals(MessageCodes.REGISTRATION_ALREADY_EXISTS, codeOf(sameDirectoryUser));
+        assertEquals(1, users.saved.size());
     }
 }
