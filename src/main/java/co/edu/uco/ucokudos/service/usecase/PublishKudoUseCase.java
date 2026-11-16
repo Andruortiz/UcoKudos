@@ -103,6 +103,7 @@ public class PublishKudoUseCase implements PublishKudoPort {
         final User recipient = users.findById(request.getRecipientId())
                 .orElseThrow(() -> new DomainException(MessageCodes.USER_NOT_FOUND));
         userDomain.validateActive(author);
+        userDomain.validateCanSendKudos(author);
         userDomain.validateActive(recipient);
         kudoDomain.validateContent(request.getContent());
         kudoDomain.validateNotSelf(author, recipient);

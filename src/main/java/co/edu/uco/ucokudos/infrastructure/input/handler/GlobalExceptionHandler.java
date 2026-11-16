@@ -28,10 +28,14 @@ public class GlobalExceptionHandler {
             Map.entry(MessageCodes.KUDO_IDEMPOTENCY_CONFLICT, HttpStatus.CONFLICT),
             Map.entry(MessageCodes.KUDO_SCANNER_UNAVAILABLE, HttpStatus.SERVICE_UNAVAILABLE),
             Map.entry(MessageCodes.KUDO_ROLE_NOT_ALLOWED, HttpStatus.FORBIDDEN),
+            Map.entry(MessageCodes.KUDO_SENDER_NOT_VERIFIED, HttpStatus.FORBIDDEN),
             Map.entry(MessageCodes.USER_LIST_NOT_ALLOWED, HttpStatus.FORBIDDEN),
             Map.entry(MessageCodes.RECIPIENT_TEXT_TOO_SHORT, HttpStatus.BAD_REQUEST),
             Map.entry(MessageCodes.ACCESS_UNAVAILABLE, HttpStatus.SERVICE_UNAVAILABLE),
-            Map.entry(MessageCodes.ACCESS_TOO_MANY, HttpStatus.TOO_MANY_REQUESTS));
+            Map.entry(MessageCodes.ACCESS_TOO_MANY, HttpStatus.TOO_MANY_REQUESTS),
+            Map.entry(MessageCodes.PHONE_CODE_TOO_SOON, HttpStatus.TOO_MANY_REQUESTS),
+            Map.entry(MessageCodes.PHONE_CODE_TOO_MANY, HttpStatus.TOO_MANY_REQUESTS),
+            Map.entry(MessageCodes.PHONE_VERIFICATION_UNAVAILABLE, HttpStatus.SERVICE_UNAVAILABLE));
 
     private final MessageSource messageSource;
 

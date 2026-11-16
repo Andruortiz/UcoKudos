@@ -25,6 +25,12 @@ public class UserDomain {
         }
     }
 
+    public void validateCanSendKudos(final User user) {
+        if (!user.isEmailVerified() || !user.isPhoneVerified()) {
+            throw new DomainException(MessageCodes.KUDO_SENDER_NOT_VERIFIED);
+        }
+    }
+
     public void validateName(final String name) {
         if (name == null || name.isBlank()) {
             throw new DomainException(MessageCodes.USER_NAME_REQUIRED);
