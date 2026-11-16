@@ -82,14 +82,19 @@ public class WhatsAppNotificationSender implements NotificationSender {
                 "template", Map.of(
                         "name", template,
                         "language", Map.of("code", language),
-                        "components", List.of(Map.of(
-                                "type", "body",
-                                // same order as the template: recipient, author, category, link
-                                "parameters", List.of(
-                                        text(notice.recipientName()),
-                                        text(notice.authorName()),
-                                        text(notice.categoryName()),
-                                        text(notice.link()))))));
+                        "components", List.of(
+                                Map.of("type", "body",
+                                        // same order as the template: recipient, author, category
+                                        "parameters", List.of(
+                                                text(notice.recipientName()),
+                                                text(notice.authorName()),
+                                                text(notice.categoryName()))),
+                                // the "Ver Kudo" button ends in {{1}}: https://kudos.ucokudos.qd.je/kudos/{{1}}
+                                Map.of("type", "button",
+                                        "sub_type", "url",
+                                        "index", "0",
+                                        "parameters", List.of(Map.of("type", "text",
+                                                "text", notice.kudoId().toString()))))));
         try {
             final String answer = client.post()
                     .uri("/{version}/{phoneNumberId}/messages", apiVersion, phoneNumberId)
