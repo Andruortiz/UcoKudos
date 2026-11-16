@@ -34,6 +34,8 @@ public final class MessageCodes {
     public static final String AUTH_FORBIDDEN = "auth.forbidden";
     public static final String KUDO_NOT_FOUND = "kudo.not.found";
     public static final String REGISTRATION_ALREADY_EXISTS = "registration.already.exists";
+    public static final String ACCESS_UNAVAILABLE = "access.unavailable";
+    public static final String ACCESS_TOO_MANY = "access.too.many";
 
     private MessageCodes() {
     }
