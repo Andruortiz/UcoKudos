@@ -1,6 +1,9 @@
 package co.edu.uco.ucokudos.bootstrap;
 
+import co.edu.uco.ucokudos.service.input.port.GetAttachmentPort;
 import co.edu.uco.ucokudos.service.input.port.GetKudoPort;
+import co.edu.uco.ucokudos.service.output.port.attachment.AttachmentStorage;
+import co.edu.uco.ucokudos.service.usecase.GetAttachmentUseCase;
 import co.edu.uco.ucokudos.service.input.port.ListKudosPort;
 import co.edu.uco.ucokudos.service.output.port.repository.CategoryRepository;
 import co.edu.uco.ucokudos.service.output.port.repository.KudoRepository;
@@ -23,5 +26,10 @@ public class ListKudosConfiguration {
     GetKudoPort getKudoPort(final KudoRepository kudos, final UserRepository users,
                             final CategoryRepository categories) {
         return new GetKudoUseCase(kudos, users, categories);
+    }
+
+    @Bean
+    GetAttachmentPort getAttachmentPort(final KudoRepository kudos, final AttachmentStorage storage) {
+        return new GetAttachmentUseCase(kudos, storage);
     }
 }

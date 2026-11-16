@@ -21,8 +21,8 @@ public class KudoAttachmentJpaEntity {
     @Column(name = "content_type", nullable = false, length = 100)
     private String contentType;
 
-    @Column(name = "content", nullable = false, length = 10485760)
-    private byte[] content;
+    @Column(name = "size_bytes", nullable = false)
+    private long size;
 
     public UUID getId() {
         return id;
@@ -56,11 +56,11 @@ public class KudoAttachmentJpaEntity {
         this.contentType = contentType;
     }
 
-    public byte[] getContent() {
-        return content;
+    public long getSize() {
+        return size;
     }
 
-    public void setContent(final byte[] content) {
-        this.content = content;
+    public void setSize(final long size) {
+        this.size = size;
     }
 }

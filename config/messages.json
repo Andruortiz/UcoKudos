@@ -10,6 +10,7 @@
   "kudo.content.required": "El contenido del Kudo es obligatorio",
   "kudo.recipient.self": "No puedes enviarte un Kudo a ti mismo",
   "kudo.role.not.allowed": "Tu rol no puede enviar Kudos a ese destinatario",
+  "attachment.storage.unavailable": "No se pudo guardar o leer el adjunto, intenta de nuevo en un momento",
   "kudo.sender.not.verified": "Verifica tu correo y tu celular en el perfil para poder enviar Kudos",
   "kudo.category.not.active": "La categoría no está activa",
   "kudo.daily.limit": "Superaste el límite de {0} Kudos por día",

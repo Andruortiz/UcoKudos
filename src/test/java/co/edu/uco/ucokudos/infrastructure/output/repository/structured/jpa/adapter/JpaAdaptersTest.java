@@ -132,7 +132,7 @@ class JpaAdaptersTest {
         assertTrue(found.getAttachments().stream().anyMatch(a -> a.name().equals("a.pdf")
                 && a.contentType().equals("application/pdf")));
         final Attachment pdf = found.getAttachments().stream().filter(a -> a.name().equals("a.pdf")).findFirst().orElseThrow();
-        assertArrayEquals(new byte[]{1, 2, 3}, pdf.content());
+        assertEquals(3, pdf.size());
         assertEquals(1, kudos.countByAuthorBetween(author, NOW.minusSeconds(3600), NOW.plusSeconds(3600)));
     }
 
