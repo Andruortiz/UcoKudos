@@ -36,6 +36,7 @@ public class EntraSecurityConfiguration {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/access-requests").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/registrations")
                         .hasAuthority(EntraUserConverter.UNREGISTERED)
                         .anyRequest().access(AuthorizationManagers.allOf(

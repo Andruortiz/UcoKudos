@@ -19,17 +19,19 @@ public class GlobalExceptionHandler {
 
     private static final Locale LOCALE = Locale.of("es", "CO");
 
-    private static final Map<String, HttpStatus> STATUS_BY_CODE = Map.of(
-            MessageCodes.USER_NOT_FOUND, HttpStatus.NOT_FOUND,
-            MessageCodes.CATEGORY_NOT_FOUND, HttpStatus.NOT_FOUND,
-            MessageCodes.KUDO_NOT_FOUND, HttpStatus.NOT_FOUND,
-            MessageCodes.REGISTRATION_ALREADY_EXISTS, HttpStatus.CONFLICT,
-            MessageCodes.KUDO_IDEMPOTENCY_KEY_REQUIRED, HttpStatus.BAD_REQUEST,
-            MessageCodes.KUDO_IDEMPOTENCY_CONFLICT, HttpStatus.CONFLICT,
-            MessageCodes.KUDO_SCANNER_UNAVAILABLE, HttpStatus.SERVICE_UNAVAILABLE,
-            MessageCodes.KUDO_ROLE_NOT_ALLOWED, HttpStatus.FORBIDDEN,
-            MessageCodes.USER_LIST_NOT_ALLOWED, HttpStatus.FORBIDDEN,
-            MessageCodes.RECIPIENT_TEXT_TOO_SHORT, HttpStatus.BAD_REQUEST);
+    private static final Map<String, HttpStatus> STATUS_BY_CODE = Map.ofEntries(
+            Map.entry(MessageCodes.USER_NOT_FOUND, HttpStatus.NOT_FOUND),
+            Map.entry(MessageCodes.CATEGORY_NOT_FOUND, HttpStatus.NOT_FOUND),
+            Map.entry(MessageCodes.KUDO_NOT_FOUND, HttpStatus.NOT_FOUND),
+            Map.entry(MessageCodes.REGISTRATION_ALREADY_EXISTS, HttpStatus.CONFLICT),
+            Map.entry(MessageCodes.KUDO_IDEMPOTENCY_KEY_REQUIRED, HttpStatus.BAD_REQUEST),
+            Map.entry(MessageCodes.KUDO_IDEMPOTENCY_CONFLICT, HttpStatus.CONFLICT),
+            Map.entry(MessageCodes.KUDO_SCANNER_UNAVAILABLE, HttpStatus.SERVICE_UNAVAILABLE),
+            Map.entry(MessageCodes.KUDO_ROLE_NOT_ALLOWED, HttpStatus.FORBIDDEN),
+            Map.entry(MessageCodes.USER_LIST_NOT_ALLOWED, HttpStatus.FORBIDDEN),
+            Map.entry(MessageCodes.RECIPIENT_TEXT_TOO_SHORT, HttpStatus.BAD_REQUEST),
+            Map.entry(MessageCodes.ACCESS_UNAVAILABLE, HttpStatus.SERVICE_UNAVAILABLE),
+            Map.entry(MessageCodes.ACCESS_TOO_MANY, HttpStatus.TOO_MANY_REQUESTS));
 
     private final MessageSource messageSource;
 
