@@ -21,7 +21,7 @@ public class RegistrationConfiguration {
             final UserRepository users,
             final UserDomain userDomain,
             final Clock clock,
-            @Value("${kudos.allowed-email-domains}") final List<String> allowedDomains) {
+            @Value("${kudos.registration.allowed-email-domains}") final List<String> allowedDomains) {
         return new SubmitRegistrationUseCase(registrations, users, userDomain, allowedDomains, clock);
     }
 }

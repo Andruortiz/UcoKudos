@@ -1,7 +1,6 @@
 package co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.entity;
 
 import jakarta.persistence.*;
-import java.time.Instant;
 import java.util.UUID;
 
 @Entity

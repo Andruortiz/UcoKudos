@@ -1,7 +1,6 @@
 package co.edu.uco.ucokudos.service.input.dto.response;
 
 import co.edu.uco.ucokudos.domain.model.Attachment;
-import co.edu.uco.ucokudos.domain.model.KudoStatus;
 
 import java.time.Instant;
 import java.util.ArrayList;

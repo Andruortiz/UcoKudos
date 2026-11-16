@@ -8,7 +8,6 @@ import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
