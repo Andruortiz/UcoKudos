@@ -20,7 +20,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class RegistrationControllerTest {
 
     @Autowired MockMvc mvc;
-    @Value("${kudos.allowed-email-domains}") String domain;
+    @Value("${kudos.registration.allowed-email-domains}") java.util.List<String> domains;
+    @Value("${kudos.login.allowed-email-domains}") java.util.List<String> loginDomains;
 
     private String body(final String email, final String role) {
         return "{\"name\":\"Pedro Pérez\",\"email\":\"%s\",\"phone\":\"+573001234567\",\"role\":%s}"
@@ -28,7 +29,7 @@ class RegistrationControllerTest {
     }
 
     private String email() {
-        return "p" + UUID.randomUUID().toString().substring(0, 8) + "@" + domain;
+        return "p" + UUID.randomUUID().toString().substring(0, 8) + "@" + domains.get(0);
     }
 
     @Test
@@ -37,6 +38,31 @@ class RegistrationControllerTest {
                         .content(body(email(), "\"STUDENT\"")))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("PENDING"));
+    }
+
+    @Test
+    void theLoginAcceptsTheInstitutionAndTheDemoDirectoryWhileTheRegistrationOnlyTheInstitution() {
+        org.junit.jupiter.api.Assertions.assertEquals(java.util.List.of("uco.net.co", "uco.edu.co"), domains);
+        org.junit.jupiter.api.Assertions.assertTrue(loginDomains.containsAll(
+                java.util.List.of("uco.net.co", "uco.edu.co", "ucokudosgmail.onmicrosoft.com")), loginDomains.toString());
+    }
+
+    @Test
+    void bothInstitutionalDomainsAreAcceptedForRegistration() throws Exception {
+        for (final String domain : new String[]{"uco.net.co", "uco.edu.co"}) {
+            mvc.perform(post("/api/v1/registrations").contentType(MediaType.APPLICATION_JSON)
+                            .content(body("p" + UUID.randomUUID().toString().substring(0, 8) + "@" + domain,
+                                    "\"TEACHER\"")))
+                    .andExpect(status().isCreated());
+        }
+    }
+
+    @Test
+    void theDemoDirectoryDomainIsNotAnInstitutionalEmailForRegistration() throws Exception {
+        mvc.perform(post("/api/v1/registrations").contentType(MediaType.APPLICATION_JSON)
+                        .content(body("ana@ucokudosgmail.onmicrosoft.com", "\"STUDENT\"")))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value(MessageCodes.USER_EMAIL_NOT_INSTITUTIONAL));
     }
 
     @Test

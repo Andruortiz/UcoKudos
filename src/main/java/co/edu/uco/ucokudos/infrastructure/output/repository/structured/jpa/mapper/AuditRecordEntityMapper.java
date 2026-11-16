@@ -3,7 +3,6 @@ package co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.mapp
 import co.edu.uco.ucokudos.domain.model.AuditRecord;
 import co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.entity.AuditRecordJpaEntity;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface AuditRecordEntityMapper {

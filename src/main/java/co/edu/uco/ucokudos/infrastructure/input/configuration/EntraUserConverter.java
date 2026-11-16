@@ -26,7 +26,7 @@ public class EntraUserConverter implements Converter<Jwt, AbstractAuthentication
     private final List<String> allowedDomains;
 
     public EntraUserConverter(final UserRepository users, final UserDomain userDomain,
-                              @Value("${kudos.allowed-email-domains}") final List<String> allowedDomains) {
+                              @Value("${kudos.login.allowed-email-domains}") final List<String> allowedDomains) {
         this.users = users;
         this.userDomain = userDomain;
         this.allowedDomains = allowedDomains;
