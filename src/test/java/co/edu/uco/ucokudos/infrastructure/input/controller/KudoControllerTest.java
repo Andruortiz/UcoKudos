@@ -127,12 +127,40 @@ class KudoControllerTest {
     }
 
     @Test
-    void anAttachmentIs503UntilTheScannerExists() throws Exception {
+    void anAttachmentWhoseBytesDoNotMatchItsTypeIs422() throws Exception {
         mvc.perform(post(recipientId, "Con adjunto", "k-" + authorId)
                         .file(new MockMultipartFile("files", "a.pdf", "application/pdf", new byte[]{1}))
                         .with(user(authorId.toString())).with(csrf()))
-                .andExpect(status().isServiceUnavailable())
-                .andExpect(jsonPath("$.code").value(MessageCodes.KUDO_SCANNER_UNAVAILABLE));
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value(MessageCodes.KUDO_ATTACHMENT_TYPE));
+    }
+
+    @Test
+    void anAttachmentIsStoredListedAndDownloadedOnlyByTheTwoParties() throws Exception {
+        final byte[] pdf = "%PDF-1.4 demo".getBytes();
+        final String kudoId = com.jayway.jsonpath.JsonPath.read(
+                mvc.perform(post(recipientId, "Con adjunto", "k-" + authorId)
+                                .file(new MockMultipartFile("files", "nota.pdf", "application/pdf", pdf))
+                                .with(user(authorId.toString())).with(csrf()))
+                        .andExpect(status().isCreated())
+                        .andReturn().getResponse().getContentAsString(), "$.id");
+        final String attachmentId = com.jayway.jsonpath.JsonPath.read(
+                mvc.perform(get("/api/v1/kudos/" + kudoId).with(user(recipientId.toString())))
+                        .andExpect(jsonPath("$.attachments[0].name").value("nota.pdf"))
+                        .andExpect(jsonPath("$.attachments[0].size").value(pdf.length))
+                        .andReturn().getResponse().getContentAsString(), "$.attachments[0].id");
+
+        final String url = "/api/v1/kudos/" + kudoId + "/attachments/" + attachmentId;
+        mvc.perform(get(url).with(user(recipientId.toString())))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().bytes(pdf))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                        .string("Content-Disposition", org.hamcrest.Matchers.containsString("attachment")));
+        mvc.perform(get(url).with(user(saveUser(Role.STUDENT).toString())))
+                .andExpect(status().isNotFound());
+        mvc.perform(get("/api/v1/kudos/" + kudoId + "/attachments/" + UuidHelper.generate())
+                        .with(user(authorId.toString())))
+                .andExpect(status().isNotFound());
     }
 
     private String publishedId() throws Exception {

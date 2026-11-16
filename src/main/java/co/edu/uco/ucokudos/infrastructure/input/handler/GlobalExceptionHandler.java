@@ -27,6 +27,7 @@ public class GlobalExceptionHandler {
             Map.entry(MessageCodes.KUDO_IDEMPOTENCY_KEY_REQUIRED, HttpStatus.BAD_REQUEST),
             Map.entry(MessageCodes.KUDO_IDEMPOTENCY_CONFLICT, HttpStatus.CONFLICT),
             Map.entry(MessageCodes.KUDO_SCANNER_UNAVAILABLE, HttpStatus.SERVICE_UNAVAILABLE),
+            Map.entry(MessageCodes.ATTACHMENT_STORAGE_UNAVAILABLE, HttpStatus.SERVICE_UNAVAILABLE),
             Map.entry(MessageCodes.KUDO_ROLE_NOT_ALLOWED, HttpStatus.FORBIDDEN),
             Map.entry(MessageCodes.KUDO_SENDER_NOT_VERIFIED, HttpStatus.FORBIDDEN),
             Map.entry(MessageCodes.USER_LIST_NOT_ALLOWED, HttpStatus.FORBIDDEN),

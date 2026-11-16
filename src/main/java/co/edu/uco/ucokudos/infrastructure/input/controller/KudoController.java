@@ -9,7 +9,10 @@ import co.edu.uco.ucokudos.service.input.dto.request.PublishKudoRequest;
 import co.edu.uco.ucokudos.service.input.dto.response.KudoDetailResponse;
 import co.edu.uco.ucokudos.service.input.dto.response.ListKudosResponse;
 import co.edu.uco.ucokudos.service.input.dto.response.PublishKudoResponse;
+import co.edu.uco.ucokudos.service.input.port.GetAttachmentPort;
 import co.edu.uco.ucokudos.service.input.port.GetKudoPort;
+import org.springframework.http.ContentDisposition;
+import java.nio.charset.StandardCharsets;
 import co.edu.uco.ucokudos.service.input.port.ListKudosPort;
 import co.edu.uco.ucokudos.service.input.port.PublishKudoPort;
 import jakarta.validation.Valid;
@@ -33,11 +36,14 @@ public class KudoController {
     private final ListKudosPort listKudosPort;
     private final GetKudoPort getKudoPort;
 
+    private final GetAttachmentPort getAttachmentPort;
+
     public KudoController(final PublishKudoPort publishKudoPort, final ListKudosPort listKudosPort,
-                          final GetKudoPort getKudoPort) {
+                          final GetKudoPort getKudoPort, final GetAttachmentPort getAttachmentPort) {
         this.publishKudoPort = publishKudoPort;
         this.listKudosPort = listKudosPort;
         this.getKudoPort = getKudoPort;
+        this.getAttachmentPort = getAttachmentPort;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -79,6 +85,18 @@ public class KudoController {
         request.setDirection(direction);
         request.setCategoryId(categoryId);
         return listKudosPort.execute(request);
+    }
+
+    @GetMapping("/{id}/attachments/{attachmentId}")
+    public ResponseEntity<byte[]> attachment(@PathVariable("id") final UUID id,
+                                             @PathVariable("attachmentId") final UUID attachmentId,
+                                             final Authentication authentication) {
+        final Attachment attachment = getAttachmentPort.execute(authorId(authentication), id, attachmentId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(attachment.contentType()))
+                .header("Content-Disposition", ContentDisposition.attachment()
+                        .filename(attachment.name(), StandardCharsets.UTF_8).build().toString())
+                .body(attachment.content());
     }
 
     @GetMapping("/{id}")

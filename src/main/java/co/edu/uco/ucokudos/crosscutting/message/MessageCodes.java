@@ -21,6 +21,7 @@ public final class MessageCodes {
     public static final String KUDO_ATTACHMENT_TYPE = "kudo.attachment.type";
     public static final String KUDO_ATTACHMENT_INFECTED = "kudo.attachment.infected";
     public static final String KUDO_SCANNER_UNAVAILABLE = "kudo.scanner.unavailable";
+    public static final String ATTACHMENT_STORAGE_UNAVAILABLE = "attachment.storage.unavailable";
     public static final String KUDO_IDEMPOTENCY_KEY_REQUIRED = "kudo.idempotency.key.required";
     public static final String KUDO_IDEMPOTENCY_CONFLICT = "kudo.idempotency.conflict";
     public static final String REQUEST_INVALID = "request.invalid";

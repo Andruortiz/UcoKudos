@@ -55,7 +55,7 @@ public class GetKudoUseCase implements GetKudoPort {
         response.setContent(kudo.getContent());
         response.setCreatedAt(kudo.getCreatedAt());
         final List<AttachmentResponse> attachments = kudo.getAttachments().stream()
-                .map(a -> new AttachmentResponse(a.name(), a.contentType(), a.size()))
+                .map(a -> new AttachmentResponse(a.id(), a.name(), a.contentType(), a.size()))
                 .toList();
         response.setAttachments(attachments);
         return response;

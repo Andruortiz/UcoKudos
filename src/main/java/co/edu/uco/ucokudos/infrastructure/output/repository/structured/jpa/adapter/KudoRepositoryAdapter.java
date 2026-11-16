@@ -1,13 +1,14 @@
 package co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.adapter;
 
 import co.edu.uco.ucokudos.crosscutting.util.helper.UuidHelper;
+import co.edu.uco.ucokudos.domain.model.Attachment;
 import co.edu.uco.ucokudos.domain.model.Kudo;
 import co.edu.uco.ucokudos.domain.model.KudoDirection;
 import co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.entity.KudoAttachmentJpaEntity;
-import co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.mapper.KudoAttachmentEntityMapper;
 import co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.mapper.KudoEntityMapper;
 import co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.repository.KudoAttachmentJpaRepository;
 import co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.repository.KudoJpaRepository;
+import co.edu.uco.ucokudos.service.output.port.attachment.AttachmentStorage;
 import co.edu.uco.ucokudos.service.output.port.repository.KudoRepository;
 import java.time.Instant;
 import java.util.List;
@@ -24,17 +25,17 @@ public class KudoRepositoryAdapter implements KudoRepository {
     private final KudoJpaRepository jpaRepository;
     private final KudoAttachmentJpaRepository attachmentRepository;
     private final KudoEntityMapper mapper;
-    private final KudoAttachmentEntityMapper attachmentMapper;
+    private final AttachmentStorage storage;
 
     public KudoRepositoryAdapter(
             final KudoJpaRepository jpaRepository,
             final KudoAttachmentJpaRepository attachmentRepository,
             final KudoEntityMapper mapper,
-            final KudoAttachmentEntityMapper attachmentMapper) {
+            final AttachmentStorage storage) {
         this.jpaRepository = jpaRepository;
         this.attachmentRepository = attachmentRepository;
         this.mapper = mapper;
-        this.attachmentMapper = attachmentMapper;
+        this.storage = storage;
     }
 
     @Override
@@ -43,8 +44,14 @@ public class KudoRepositoryAdapter implements KudoRepository {
         jpaRepository.save(mapper.toJpa(kudo));
         final List<KudoAttachmentJpaEntity> attachments = kudo.getAttachments().stream()
                 .map(attachment -> {
-                    final KudoAttachmentJpaEntity entity = attachmentMapper.toJpa(attachment, kudo.getId());
+                    final KudoAttachmentJpaEntity entity = new KudoAttachmentJpaEntity();
                     entity.setId(UuidHelper.generate());
+                    entity.setKudoId(kudo.getId());
+                    entity.setName(attachment.name());
+                    entity.setContentType(attachment.contentType());
+                    entity.setSize(attachment.size());
+                    storage.put(AttachmentStorage.keyOf(kudo.getId(), entity.getId()),
+                            attachment.contentType(), attachment.content());
                     return entity;
                 })
                 .toList();
@@ -57,11 +64,12 @@ public class KudoRepositoryAdapter implements KudoRepository {
         return jpaRepository.findById(id).map(entity -> {
             final Kudo kudo = mapper.toDomain(entity);
             kudo.setAttachments(attachmentRepository.findByKudoId(id).stream()
-                    .map(attachmentMapper::toDomain)
+                    .map(a -> new Attachment(a.getId(), a.getName(), a.getContentType(), a.getSize(), new byte[0]))
                     .toList());
             return kudo;
         });
     }
+
 
     @Override
     public long countByAuthorBetween(final UUID authorId, final Instant from, final Instant to) {
