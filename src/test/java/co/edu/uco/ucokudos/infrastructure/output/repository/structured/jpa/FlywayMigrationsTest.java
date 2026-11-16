@@ -37,7 +37,8 @@ class FlywayMigrationsTest {
 
     @Test
     void everyEnvironmentGetsTheInitialCategories() {
-        assertEquals(5, jdbc.queryForObject("select count(*) from category where active", Integer.class));
+        assertEquals(15, jdbc.queryForObject("select count(*) from category where active", Integer.class));
+        assertEquals(0, jdbc.queryForObject("select count(*) from category where active and name = 'Colaboración'", Integer.class));
     }
 
     @Test

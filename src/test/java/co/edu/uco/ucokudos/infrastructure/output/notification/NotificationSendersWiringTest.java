@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/** Each channel exists only when its provider is configured; without configuration the notice stays pending. */
+/** Email and WhatsApp exist only when their provider is configured; push needs none, so it is always there. */
 class NotificationSendersWiringTest {
 
     private static Set<NotificationChannel> channelsWith(final String... properties) {
@@ -29,25 +29,26 @@ class NotificationSendersWiringTest {
     }
 
     @Test
-    void withoutConfigurationThereIsNoSender() {
-        assertEquals(Set.of(), channelsWith());
+    void withoutConfigurationOnlyPushExists() {
+        assertEquals(Set.of(NotificationChannel.PUSH), channelsWith());
     }
 
     @Test
     void whatsAppExistsOnlyWithTheTokenAndThePhoneNumberId() {
-        assertEquals(Set.of(), channelsWith("kudos.whatsapp.token=t"));
-        assertEquals(Set.of(NotificationChannel.WHATSAPP),
+        assertEquals(Set.of(NotificationChannel.PUSH), channelsWith("kudos.whatsapp.token=t"));
+        assertEquals(Set.of(NotificationChannel.PUSH, NotificationChannel.WHATSAPP),
                 channelsWith("kudos.whatsapp.token=t", "kudos.whatsapp.phone-number-id=1"));
     }
 
     @Test
     void emailExistsOnlyWithTheSmtpHost() {
-        assertEquals(Set.of(NotificationChannel.EMAIL), channelsWith("spring.mail.host=localhost"));
+        assertEquals(Set.of(NotificationChannel.PUSH, NotificationChannel.EMAIL),
+                channelsWith("spring.mail.host=localhost"));
     }
 
     @Test
-    void bothChannelsCanRunTogether() {
-        assertEquals(Set.of(NotificationChannel.EMAIL, NotificationChannel.WHATSAPP),
+    void allChannelsCanRunTogether() {
+        assertEquals(Set.of(NotificationChannel.PUSH, NotificationChannel.EMAIL, NotificationChannel.WHATSAPP),
                 channelsWith("spring.mail.host=localhost", "kudos.whatsapp.token=t", "kudos.whatsapp.phone-number-id=1"));
     }
 }
