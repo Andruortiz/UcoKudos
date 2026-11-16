@@ -48,7 +48,7 @@ class WhatsAppNotificationSenderTest {
         });
         server.start();
         sender = new WhatsAppNotificationSender("http://localhost:" + server.getAddress().getPort(), "v22.0",
-                "PHONE-ID-1", "SECRET-TOKEN", "kudo_recibido", "es_CO");
+                "PHONE-ID-1", "SECRET-TOKEN", "kudos_envios_url", "es_CO");
     }
 
     @AfterEach
@@ -56,8 +56,10 @@ class WhatsAppNotificationSenderTest {
         server.stop(0);
     }
 
+    private static final UUID KUDO_ID = UUID.fromString("0a1b2c3d-0000-0000-0000-000000000000");
+
     private static KudoNotice notice(final String phone) {
-        return new KudoNotice(UUID.randomUUID(), UUID.randomUUID(), "Luis Docente", "luis@uco.net.co", phone,
+        return new KudoNotice(KUDO_ID, UUID.randomUUID(), "Luis Docente", "luis@uco.net.co", phone,
                 "Ana Estudiante", "Empatía", "http://localhost:5173/kudos/abc");
     }
 
@@ -67,7 +69,7 @@ class WhatsAppNotificationSenderTest {
     }
 
     @Test
-    void itPostsTheApprovedTemplateWithTheFourVariablesInOrder() {
+    void itPostsTheApprovedTemplateWithTheThreeVariablesInOrderAndTheKudoIdInTheButton() {
         final DeliveryResult result = sender.send(notice("+57 300 123 4567"));
 
         assertEquals(DeliveryResult.SENT, result);
@@ -80,14 +82,18 @@ class WhatsAppNotificationSenderTest {
         final String body = request.body();
         assertTrue(body.contains("\"messaging_product\":\"whatsapp\""), body);
         assertTrue(body.contains("\"to\":\"573001234567\""), body);
-        assertTrue(body.contains("\"name\":\"kudo_recibido\""), body);
+        assertTrue(body.contains("\"name\":\"kudos_envios_url\""), body);
         assertTrue(body.contains("\"code\":\"es_CO\""), body);
-        // recipient, author, category, link: the order of the variables in the template
+        // recipient, author, category: the order of the variables in the template body
         final int recipient = body.indexOf("Luis Docente");
         final int author = body.indexOf("Ana Estudiante");
         final int category = body.indexOf("Empatía");
-        final int link = body.indexOf("http://localhost:5173/kudos/abc");
-        assertTrue(recipient > 0 && recipient < author && author < category && category < link, body);
+        assertTrue(recipient > 0 && recipient < author && author < category, body);
+        // the dynamic URL button receives only the id that completes https://kudos.ucokudos.qd.je/kudos/{{1}}
+        assertTrue(body.contains("\"sub_type\":\"url\""), body);
+        assertTrue(body.contains("\"index\":\"0\""), body);
+        assertTrue(body.indexOf(KUDO_ID.toString()) > category, body);
+        assertFalse(body.contains("http://localhost:5173"), body);
     }
 
     @Test
