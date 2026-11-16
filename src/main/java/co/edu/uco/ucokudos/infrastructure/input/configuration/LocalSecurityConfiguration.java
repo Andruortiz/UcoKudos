@@ -36,7 +36,8 @@ public class LocalSecurityConfiguration {
     SecurityFilterChain localFilterChain(final HttpSecurity http,
                                          @Value("${kudos.dev.user-id}") final String defaultUserId) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable())
+                // Development only (kudos.dev-auth.enabled=true): same stateless API, authenticated by the X-Dev-User header.
+                .csrf(csrf -> csrf.disable()) // NOSONAR java:S4502 reviewed: development-only, stateless
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())

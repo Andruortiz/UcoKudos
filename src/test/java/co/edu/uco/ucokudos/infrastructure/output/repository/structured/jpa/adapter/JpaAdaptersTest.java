@@ -14,8 +14,10 @@ import co.edu.uco.ucokudos.domain.model.NotificationStatus;
 import co.edu.uco.ucokudos.domain.model.Role;
 import co.edu.uco.ucokudos.domain.model.User;
 import co.edu.uco.ucokudos.domain.model.UserStatus;
+import co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.entity.AuditRecordJpaEntity;
 import co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.mapper.CategoryEntityMapper;
 import co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.mapper.UserEntityMapper;
+import co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.repository.AuditRecordJpaRepository;
 import co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.repository.CategoryJpaRepository;
 import co.edu.uco.ucokudos.infrastructure.output.repository.structured.jpa.repository.UserJpaRepository;
 import org.junit.jupiter.api.Test;
@@ -44,6 +46,7 @@ class JpaAdaptersTest {
     @Autowired KudoRepositoryAdapter kudos;
     @Autowired NotificationRepositoryAdapter notifications;
     @Autowired AuditRepositoryAdapter audits;
+    @Autowired AuditRecordJpaRepository auditJpa;
     @Autowired IdempotencyRepositoryAdapter idempotency;
 
     private Kudo kudo(final UUID authorId, final Instant createdAt, final List<Attachment> attachments) {
@@ -185,8 +188,18 @@ class JpaAdaptersTest {
 
     @Test
     void auditRecordIsSaved() {
-        audits.save(new AuditRecord(UuidHelper.generate(), NOW, UuidHelper.generate(), AuditAction.KUDO_PUBLISHED,
-                "KUDO", UuidHelper.generate(), "key-1"));
+        final UUID id = UuidHelper.generate();
+        final UUID actor = UuidHelper.generate();
+        final UUID resource = UuidHelper.generate();
+
+        audits.save(new AuditRecord(id, NOW, actor, AuditAction.KUDO_PUBLISHED, "KUDO", resource, "key-1"));
+
+        final AuditRecordJpaEntity saved = auditJpa.findById(id).orElseThrow();
+        assertEquals(actor, saved.getActorId());
+        assertEquals(AuditAction.KUDO_PUBLISHED, saved.getAction());
+        assertEquals("KUDO", saved.getResourceType());
+        assertEquals(resource, saved.getResourceId());
+        assertEquals("key-1", saved.getCorrelationId());
     }
 
     @Test

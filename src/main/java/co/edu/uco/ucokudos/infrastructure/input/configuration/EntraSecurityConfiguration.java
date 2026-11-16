@@ -26,7 +26,9 @@ public class EntraSecurityConfiguration {
                                          final ApiAuthErrorHandler errorHandler)
             throws Exception {
         return http
-                .csrf(csrf -> csrf.disable())
+                // Stateless API: it only accepts an Authorization Bearer token, which a browser never sends by itself,
+                // and it keeps no session cookie, so there is no cookie-based request forgery to defend against.
+                .csrf(csrf -> csrf.disable()) // NOSONAR java:S4502 reviewed: stateless bearer-token API
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
